@@ -2,6 +2,7 @@
 
 #include "Screen.h"
 #include "Objects.h"
+#include "Application.h"
 
 #include <string>
 #include <vector>
@@ -25,10 +26,6 @@ enum class Type {
 
 enum class EventType {
 	tick
-};
-
-struct Messages {
-	static string collide() {static string message = "collide"; return message; }
 };
 
 struct Data {
@@ -159,23 +156,36 @@ class Game : public IGame {
 		}
 	}
 	void handlerCollisions() {
-		for (auto pair : GlobalFactoryComponent::allViewObjects) {
-			auto pObj = pair.second;
-			for (auto pair : GlobalFactoryComponent::allViewObjects) {
-				auto pOtherObj = pair.second;
+		IObject* pObj = nullptr;
+		//decltype(GlobalFactoryComponent::allViewObjects[0]) pObj();
+		
+		auto itCur = GlobalFactoryComponent::allViewObjects.begin();
+		auto itEnd = GlobalFactoryComponent::allViewObjects.end();
+		while (itCur != itEnd) {
+			auto pObj = itCur->second;
+			auto nestedCur = itCur;
+			++nestedCur;
+			while (nestedCur != itEnd) {
+				auto pOtherObj = nestedCur->second;
 				if (pOtherObj == pObj) continue;
-				if (pObj->isCollide(*pOtherObj)) {
-					pObj->message(pOtherObj, Messages::collide());
+				IView* pViewObj = dynamic_cast<IView*>(pObj);
+				IView* pOtherViewObj = dynamic_cast<IView*>(nestedCur->second);
+				if (pViewObj && pOtherViewObj) {
+					if (pViewObj->isCollide(*pOtherViewObj)) {
+						pViewObj->message(pOtherViewObj, Messages::collide());
+						pOtherViewObj->message(pViewObj, Messages::collide());	
+					}
 				}
-				// 
+				nestedCur++;
 			}
+			itCur++;
 		}
 		//{
-		//	if (pObject->getChildren()) {
-		//		auto size = pObject->getChildren()->size();
+		//	if (pObj->getChildren()) {
+		//		auto size = pObj->getChildren()->size();
 		//		for (decltype(size) i = 0; i < size; ++i) {
 		//			//auto curChild
-		//			handlerCollisions(pObject->getChildren()->get(i));
+		//			handlerCollisions(*pObj->getChildren()->get(i));
 		//		}
 		//	}
 		//}
@@ -205,8 +215,11 @@ class Game : public IGame {
 		//cout << endl << "========" << state << "==========";
 		}
 public:
+	static Game* game;
 	shared_ptr<Root> tree;
 	Game(IScreen& screen, Input& input): input{input} {
+		Application::setScreen(&screen);
+		game = this;
 		tickHandler = [this, &screen](Event& event) {
 			//cout << "[Tick] " << event.data.toString() << endl;
 			this->input.process();

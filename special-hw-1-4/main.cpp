@@ -7,6 +7,7 @@
 #include "Game.h"
 
 #include "inequalities.h"
+#include "Collision.h"
 
 #include <iostream>
 #include <vector>
@@ -21,6 +22,8 @@
 #include <stack>
 #include <set>
 #include <tuple>
+#include <memory>
+#include <iomanip>
 
 using namespace std;
 
@@ -35,43 +38,126 @@ bool testGetCross() {
 
 struct Ball : public RectangleObject {
     Screen& screen;
-    int direction = 3;
+    int direction = 1;
     Ball(Screen& screen): screen{screen}, RectangleObject{{0, 0}, {2, 0}, {2, 2}, {0, 2}} {
-        speed = 1;
+        static CollisionHandler callback = [this](IView* obj, string message) { collideHandler(obj, Messages::collide()); };
+        static CollisionHandler nearTheBorderCallback = [this](IView* obj, string message) { 
+            nearTheBorderHandler(obj, Messages::nearTheBorder());
+            };
+        /*speed = 100;*/
+        addCollisionHandler(&callback);
+		addCollisionHandler(&nearTheBorderCallback);
     }
+
+    void collideHandler(IView* obj, const string& message) {
+        static int collided_count = 0;
+        //pointer_traits<decltype(obj)>::element_type 
+        if (message == Messages::collide()) {
+            cout << "\n\n!!! Now COLLIDED Number: " << ++collided_count << endl;
+            cout << "x, y: " << this->getPosition().x << ", " << this->getPosition().y << endl;
+            cout << direction;
+            Coords coords = this->getPosition();
+            float x = coords.x, y = coords.y;
+            using TwidthHeight = decltype(screen.getHeight());
+            TwidthHeight gap = 3;
+            TwidthHeight cornerW = screen.getWidth() - gap;
+            TwidthHeight cornerH = screen.getHeight() - gap;
+            if ((x <= gap && y <= gap) || (x >= cornerW && y >= cornerH)) {
+                direction = (direction % 2) + 1;
+                //direction = 2;
+            }
+        }	
+    }
+
+    void nearTheBorderHandler(IView* obj, const string& message) {
+        cout << "\n\n nearTheBorder pos: " << obj->getPosition().x << ", " << obj->getPosition().y << endl;
+    }
+
    /* vector<unsigned long long> times;*/
     vector<float> moves;
     int maxCount = 50;
 	void TickHandler(unsigned long long deltaTime) override {
-        //times.push_back(deltaTime);
-        //if (maxCount-- == 0) {
-        //    cout << times[10] << endl;
-        //}
         static int counter = 0;
+        if (direction == 0) return;
         //deltaTime = 30; //0,030 * 100 = 3
         float moveDist = (deltaTime / 1000.0) * speed;
-        auto pos = this->getPosition();
-        if (pos.y >= screen.height - 3)
-            return;
-        if (counter++ == 5) ++direction;
-        /*moves.push_back(moveDist);*/
-        if (true) //direction == 3)
-            move(screen, moveDist, moveDist);
-        else if (direction == 4)
-            move(screen, 0, moveDist);
-		else if (direction == 5)
-			move(screen, -moveDist, moveDist);
-	}
 
-    void message(IView* object, string message) override {
-        static int collided_count = 0;
-        if (message == Messages::collide())
-            cout << "\n!!!!!!!!! COLLIDED Number: " << ++collided_count << endl;
+        auto pos = this->getPosition();
+        if (pos.y >= screen.height - 3 && direction == 1)
+            return;
+        if (pos.y <= 0 && direction == 2)
+            return;
+
+        /*if (counter++ == 5) ++direction;*/
+        /*moves.push_back(moveDist);*/
+
+        if (direction == 1) {
+            /*move(screen, moveDist, moveDist);*/
+            setMoveVector({1, 1});
+        }
+            
+        else if (direction == 2) {
+            /*move(screen, -moveDist, -moveDist);*/
+            setMoveVector({ -1, -1 });
+        }
+		//else if (direction == 5)
+		//	move(screen, -moveDist, moveDist);
+        ViewObject::TickHandler(deltaTime);
 	}
+ //   void message(IView* object, string message) override {
+ //       static int collided_count = 0;
+ //       if (message == Messages::collide())
+ //           cout << "\n!!!!!!! NEW COLLIDED Number: " << ++collided_count << endl;
+	//}
 };
 
 int main()
 {
+ //   PointEquation pt1{1, 2};
+ //   PointEquation pt2{1, 2};
+ //   PointCollision pc1{pt1};
+ //   PointCollision pc2{pt2};
+ //   cout << "test1: " << pc1.isCollide(pc2) << endl;
+
+ //   LineEquation lnEq1, lnEq2;
+ //   lnEq1.init(pt1, pt2);
+ //   lnEq2.init(pt1, pt2);
+ //   LineCollision lc1{lnEq1}, lc2{lnEq2};
+ //   cout << "test2: " << lc1.isCollide(lc2) << endl;
+
+ //   cout << "test3: " << lc1.isCollide(pc1) << endl;
+ //   cout << "test4: " << pc1.isCollide(lc1) << endl;
+
+ //   cout << "test5: " << LineCollision{ {2, 2}, {4, 4} }.isCollide(PointCollision{3, 3}) << endl;
+ //   cout << "test6: " << LineCollision{ {2, 2}, {4, 4} }.isCollide(PointCollision{ 2, 2 }) << endl;
+ //   cout << "test7: " << LineCollision{ {2, 2}, {4, 4} }.isCollide(PointCollision{ 4, 4 }) << endl;
+
+ //   cout << "test8: " << !LineCollision{ {2, 2}, {4, 4} }.isCollide(PointCollision{ 3, 2 }) << endl;
+ //   cout << "test9: " << !LineCollision{ {2, 2}, {4, 4} }.isCollide(PointCollision{ 1, 1 }) << endl;
+
+ //   cout << "test10: " << !LineCollision{ {2, 2}, {4, 4} }.isCollide(LineCollision{ {2, 1}, {4, 3} }) << endl;
+ //   cout << "test11: " << !LineCollision{ {2, 2}, {4, 4} }.isCollide(LineCollision{ {0, 0}, {1, 1} }) << endl;
+
+ //   cout << "test12: " << LineCollision{ {2, 2}, {4, 4} }.isCollide(LineCollision{ {0, 0}, {2, 2} }) << endl;
+ //   cout << "test13: " << LineCollision{ {2, 2}, {4, 4} }.isCollide(LineCollision{ {0, 0}, {3, 3} }) << endl;
+ //   cout << "test14: " << LineCollision{ {2, 2}, {4, 4} }.isCollide(LineCollision{ {4, 2}, {2, 4} }) << endl;
+
+ //   cout << "test15: " << TriangleCollision{ {2, 2}, {5, 5}, {5, 2} }.isCollide(PointCollision{ {2, 2} }) << endl;
+ //   cout << "test16: " << !TriangleCollision{ {2, 2}, {5, 5}, {5, 2} }.isCollide(PointCollision{ {2, 4} }) << endl;
+
+ //   cout << "test17: " << TriangleCollision{ {2, 2}, {5, 5}, {5, 2} }.isCollide(LineCollision{ {2, 1}, {4, 3} }) << endl;
+ //   cout << "test18: " << !TriangleCollision{ {2, 2}, {5, 5}, {5, 2} }.isCollide(LineCollision{ {2, 1}, {1, 2} }) << endl;
+
+ //   cout << "test19: " << TriangleCollision{ {2, 2}, {5, 5}, {5, 2} }
+ //       .isCollide(TriangleCollision{ {3, 1}, {4, 3}, {4, 1} }) << endl;
+ //   cout << "test20: " << !TriangleCollision{ {2, 2}, {5, 5}, {5, 2} }
+ //       .isCollide(TriangleCollision{ {1, 3}, {3, 6}, {3, 4} }) << endl;
+
+	//cout << "test21: " << PolylineCollision{ {{2, 2}, {5, 5}, {5, 2}, {2, 2}} }
+	//	.isCollide(PolylineCollision{ {{3, 1}, {4, 3}, {4, 1}, {3, 1} }}) << endl;
+	//cout << "test22: " << !PolylineCollision{ {{2, 2}, {5, 5}, {5, 2}, {2, 2}} }
+	//	.isCollide(PolylineCollision{ {{1, 3}, {3, 6}, {3, 4}, {1, 3} }}) << endl;
+ //   return 0;
     /*cout << "Test getCross: " << testGetCross() << endl;
     exit(0);*/
     //std::cout << '\xDB' << '\xDC' << '\xDF' << endl;
@@ -111,19 +197,38 @@ int main()
         return make_tuple(factors[0] * move, factors[1] * move);
     };
 
-    auto myObj = Builder::createLineObject(shapes::Point{ 10, 20 }, shapes::Point{ 10, 40 });
-    myObj->speed = 1;
+    auto myObj = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 10 });
+	static CollisionHandler nearTheBorderCallback = [](IView* obj, string message) {
+        Coords pos = obj->getPosition();
+        cout.setf(ios::fixed);
+		cout << "=================================[LineObject] message: " << message 
+             << setprecision(2) << " pos: " << pos.x << ", " << pos.y << endl;
+	};
+	myObj->addCollisionHandler(&nearTheBorderCallback);
+    myObj->minX = 0;
+    myObj->minY = 0;
+    float width, height;
+    myObj->getEnclosingRect(width, height);
+    myObj->maxX = screen.getWidth() - width;
+    myObj->maxY = screen.getHeight() - height;
+    /*myObj->speed = 100;*/
     /*myObj->direction = 4;*/
     //uint8_t direction = 0;
     /*cout << "\nmyObj1: " << myObj.get() << "dir: " << (int)myObj->direction << endl;*/
     myObj->fnTickHandler = [&myObj, &screen, &fnDirToMove](unsigned long long deltaTime) {
-        //cout << "dir: " << (int)myObj->direction << endl;
+        myObj->ViewObject::TickHandler(deltaTime);
+
+        static decltype(screen.width) gap = 1;
+        Coords curPos = myObj->getPosition();
+        //if (coords.x <= 0) {
+        //    myObj->setPosition({0, coords.y});
+        //    return;
+        //}
+        
+
         deltaTime = 30;
 		float moveDist = myObj->speed * deltaTime / 1000.0;
-        //cout << " - -- -- " << moveDist;
-        //myObj->move(screen, moveDist, 0);
-        //return;
-        /*cout << "\n\n\nmyObj2: " << myObj.get() << "dir: " << (int)myObj->direction << endl;*/
+        
         if (myObj->getDirection() != 0) {
             //if (myObj->getDirection() != 1) {
             //    cout << myObj->getDirection();
@@ -133,18 +238,24 @@ int main()
             //cout << "\n                                " << (float)(get<0>(dists)) << ",           " << (float)(get<1>(dists));
             /*myObj->move(screen, get<0>(dists), get<1>(dists));*/
 			if (myObj->getDirection() == 1) {
+                /*if (curPos.y - moveDist < 0) return;*/
 				myObj->move(screen, 0, -moveDist);
 			}
 			else if (myObj->getDirection() == 3) {
+                /*if (curPos.x + moveDist > screen.width - gap) return;*/
 				myObj->move(screen, moveDist, 0);
 			}
             if (myObj->getDirection() == 5) {
+                /*auto pLine = myObj->getFirstConcreteShape<Line>();
+                float len = pLine->getLength();
+                if (curPos.y + len > screen.height) return;*/
                 myObj->move(screen, 0, moveDist);
             }
 			//else if (myObj->getDirection() == 4) {
 			//	myObj->move(screen, moveDist, moveDist);
 			//}
-			else if (myObj->getDirection() == 7) {   
+			else if (myObj->getDirection() == 7) {
+                /*if (curPos.x - moveDist < 0) return;*/
 				myObj->move(screen, -moveDist, 0);
 			}
             /*myObj->render(screen);*/
@@ -167,7 +278,7 @@ int main()
             }
             if (!isPressed) {
                 myObj->setDirection(0);
-                cout << "dir, ch: " << (int)myObj->getDirection() << ", " << chPressed << endl;
+                /*cout << "dir, ch: " << (int)myObj->getDirection() << ", " << chPressed << endl;*/
                 return;
             }
             static map<char, uint8_t> directions = {
@@ -183,7 +294,7 @@ int main()
             if (itDir != directions.end()) {
                 myObj->setDirection(itDir->second);
             }
-            cout << "dir, ch: " << (int)myObj->getDirection() << ", " << itDir->first << endl;
+            /*cout << "dir, ch: " << (int)myObj->getDirection() << ", " << itDir->first << endl;*/
 	    };
     input.add({'a', 'd', 'w', 's'}, handler);
 	/* input.add('d', handler);

@@ -1,3 +1,3 @@
 #include "Objects.h"
 
-map<size_t, IView*> GlobalFactoryComponent::allViewObjects = {};
+map<size_t, IObject*> GlobalFactoryComponent::allViewObjects = {};

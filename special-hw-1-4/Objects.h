@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Shapes.h"
+#include "Application.h"
+#include "utils.h"
 
 #include <vector>
 #include <memory>
@@ -11,13 +13,18 @@
 #include <functional>
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <algorithm>
 
 using namespace std;
+
+class IView;
+
 using ShapeCollection = shapes::ShapeCollection;
 using Point = shapes::Point;
 using IShape = shapes::IShape;
 using Line = shapes::Line;
-
+using CollisionHandler = function<void(IView*, string)>;
 
 struct IObject;
 
@@ -28,21 +35,38 @@ struct IObjectCollection {
 	virtual size_t size() = 0;
 };
 
-struct IObject {
-	virtual size_t getId() = 0;
+struct ICollectionTree {
 	virtual shared_ptr<IObject> getParent() = 0;
 	virtual void setParent(shared_ptr<IObject> parent) = 0;
 	virtual shared_ptr<IObjectCollection> getChildren() = 0;
 	virtual void setChildren(shared_ptr<IObjectCollection> position) = 0;
 };
 
-struct IView {
+struct IObject {//: public ICollectionTree {
+	virtual size_t getId() = 0;
+	virtual shared_ptr<IObject> getParent() = 0;
+	virtual void setParent(shared_ptr<IObject> parent) = 0;
+	virtual shared_ptr<IObjectCollection> getChildren() = 0;
+	virtual void setChildren(shared_ptr<IObjectCollection> position) = 0;
+	virtual void Tick() = 0;
+	virtual void TickHandler(unsigned long long deltaTime) = 0;
+};
+
+struct IView {//: public ICollectionTree {
 	virtual Coords getPosition() = 0;
 	virtual void setPosition(Coords position) = 0;
 	virtual shared_ptr<ShapeCollection> getShapes() = 0;
 	virtual void setShapes(shared_ptr<ShapeCollection> pShapes) = 0;
 	virtual bool isCollide(IView& other) = 0;
+	virtual shared_ptr<IShape> getFirstShape() = 0;
 	virtual void message(IView* from, string message) = 0;
+	virtual Coords getMoveVector() = 0;
+	virtual void setMoveVector(Coords moveVector) = 0;
+	virtual float getSpeed() = 0;
+	virtual void setSpeed(float speed) = 0;
+	virtual void applyMoveVector(float deltaTime) = 0;
+	virtual unsigned long long getLastTick() = 0;
+	virtual void setLastTick(unsigned long long) = 0;
 };
 
 struct CreateObjectParams {
@@ -51,7 +75,7 @@ struct CreateObjectParams {
 
 // TODO make singleton
 struct GlobalFactoryComponent {
-	static map<size_t, IView*> allViewObjects;
+	static map<size_t, IObject*> allViewObjects;
 	static size_t genId() {
 		static size_t nextId = 0;
 		return nextId++;
@@ -63,18 +87,20 @@ class ObjectCollection;
 class Object : public IObject {
 	shared_ptr<IObject> parent;
 	shared_ptr<IObjectCollection> children;
+protected:
+	unsigned long long lastTick = 0;
   public:
 	size_t id;
-
+	function<void(unsigned long long)> fnTickHandler;
 	Object(): 
 		children{static_pointer_cast<IObjectCollection>(make_shared<ObjectCollection>())},
 		id{ GlobalFactoryComponent::genId() }
 	{
-
+		static function<void(unsigned long long)> emptyFunction = [](unsigned long long) {};
+		fnTickHandler = emptyFunction;
 	}
 
 	~Object() {
-		
 	}
 
 	size_t getId() override {
@@ -93,7 +119,15 @@ class Object : public IObject {
 		this->children = children;
 	}
 	// Virtual methods
-	virtual void TickHandler(unsigned long long deltaTime) {
+	void Tick() override {
+		if (!lastTick) lastTick = GetTickCount64();
+		unsigned long long newTick = GetTickCount64();
+		unsigned long long deltaTime = newTick - lastTick;
+		lastTick = newTick;
+		fnTickHandler(deltaTime);
+		TickHandler(deltaTime);
+	}
+	void TickHandler(unsigned long long deltaTime) override {
 		
 	}
 };
@@ -106,35 +140,46 @@ class Root : public Object {
 //class IViewObject : public IObject, public IView {
 //
 //};
-class ViewObject : public Object, public IView {
+class ViewObject : public IView, public IViewParent, public Object {
 	Coords position;
 	shared_ptr<shapes::ShapeCollection> pShapes;
 	uint8_t direction = 0;
+	TranslationMatrix matrix;
+	vector<CollisionHandler*> collisionHandlers;
+	Coords moveVector{};
   public:
-	function<void(unsigned long long)> fnTickHandler = [](unsigned long long){};
-	void Tick() {
-		if (!lastTick) lastTick = GetTickCount64();
-		unsigned long long newTick = GetTickCount64();
-		unsigned long long deltaTime = newTick - lastTick;
-		lastTick = newTick;
-		TickHandler(deltaTime);
-		fnTickHandler(deltaTime);
+	Option<float> minX, maxX, minY, maxY;
+	float speed = 50;
+	TranslationMatrix& getMatrix() override { return matrix; }
+	Coords applyAllMatrixes(Coords coords) override {
+		auto res = getMatrix().apply(coords);
+		auto pObj = getParent();
+		auto pViewObj = dynamic_cast<ViewObject*>(pObj.get());
+		if (pViewObj) {
+			coords = pViewObj->applyAllMatrixes(coords);
+		}
+		return coords;
 	}
-	float speed = 0;
 	
 	unsigned long long lastTick = 0;
 	void setDirection(uint8_t newVal) { 
 		direction = newVal;
 	}
 	uint8_t getDirection() { return direction; }
-	ViewObject(): pShapes{make_shared<shapes::ShapeCollection>()}, position{0, 0} {
+	ViewObject(): 
+			pShapes{make_shared<shapes::ShapeCollection>()},
+			position{0, 0}, 
+			matrix{TranslationMatrix::getUnitMatrix()}
+	{
 		GlobalFactoryComponent::allViewObjects[id] = this;
 	}
 	~ViewObject() {
 		GlobalFactoryComponent::allViewObjects.erase(id);
 	}
 	Coords getPosition() override {
-		return position;
+		
+		return matrix.apply(position);
+		/*return position;*/
 	}
 	void setPosition(Coords position) override {
 		this->position = position;
@@ -147,38 +192,47 @@ class ViewObject : public Object, public IView {
 
 		}
 	}
-	void move(Screen& screen, float deltaX, float deltaY) {
+	Coords getNewPosition(float deltaX, float deltaY) {
+		Coords pos = getPosition();
+		pos.x += deltaX;
+		pos.y += deltaY;
+		return pos;
+	}
+	void move(IScreen& screen, float deltaX, float deltaY) {
+		/*return;*/
 		Coords pos = getPosition();
 		//pos.x += deltaX;// + 0.01f;// + 1;
 		//cout << endl << "pos.x: " << pos.x;
 		//pos.y += deltaY;
-		auto correctCoord = [](float val) {
-			if (abs(val) > 0.01 && abs(val) < 1)
-				return signbit(val) ? -1.0f : 1.0f;
-			return val;
+		auto correctCoord = [](float val, const Option<float>& minOpt, const Option<float>& maxOpt) {
+			if (!minOpt.bExistsVal) {
+				if (!maxOpt.bExistsVal) 
+					return val;
+				else return max(val, maxOpt.getVal());
+			}
+			else if (!maxOpt.bExistsVal)
+				return min(val, minOpt.getVal());
+			else return clamp<float>(val, minOpt.getVal(), maxOpt.getVal());
 		};
-		pos.x += correctCoord(deltaX);
-		pos.y += correctCoord(deltaY);
-		//pos.x < 1 && (pos.x = 1.0);
-		//pos.y < 1 && (pos.y = 1.0);
-		/*if (pos.x < 0) pos.x = 0;
-		if (pos.x > screen.width) pos.x = screen.width - 1;*/
-		/*if (pos.y < 0) pos.y = 0;
-		if (pos.y > screen.height) pos.y = screen.height - 1;*/
-		/*auto shapes = getShapes();
-		for (auto& shape : *shapes) {
-			shape->clear(screen, shape->getMatrix());
-		}*/
+		pos.x += deltaX;
+		pos.y += deltaY;
+		pos.x = correctCoord(pos.x, minX, maxX);
+		pos.y = correctCoord(pos.y, minY, maxY);
+		
 		setPosition(pos);
 		render(screen);
 		screen.draw();
-
 	}
 	shared_ptr<shapes::ShapeCollection> getShapes() override {
 		return pShapes;
 	}
 	void setShapes(shared_ptr<shapes::ShapeCollection> pShapes) override {
+		for (auto&& pShape : *pShapes) {
+			auto pViewParent = static_cast<IViewParent*>(this);
+			pShape->setParent(pViewParent);
+		}
 		this->pShapes = pShapes;
+
 	}
 
 	void render(IScreen& screen) {
@@ -195,8 +249,10 @@ class ViewObject : public Object, public IView {
 		for (auto& shape : *shapes) {
 			for (auto& otherShape : *otherShapes) {
 				//if (shape->)
-				auto inequality = otherShape->getInequality();
+				/*auto inequality = otherShape->getInequality();
 				if (shape->getInequality()->isCollide(*inequality))
+					return true;*/
+				if (shape->isCollide(otherShape.get()))
 					return true;
 			}
 		}
@@ -204,7 +260,70 @@ class ViewObject : public Object, public IView {
 	}
 
 	void message(IView* object, string message) override {
+		//if (object != this) {
+			for (auto& handler : collisionHandlers) {
+				(*handler)(object, message);
+			}
+		//}
+	}
+	void addCollisionHandler(CollisionHandler* callback) {
+		collisionHandlers.push_back(callback);
+	}
 
+	shared_ptr<IShape> getFirstShape() override {
+		auto pShapes = getShapes();
+		if (pShapes->empty()) return nullptr;
+		return (*pShapes)[0];
+	}
+
+	template<class T>
+	T* getFirstConcreteShape() {
+		shared_ptr<IShape> pShape = getFirstShape();
+		auto pConcreteShape = dynamic_cast<T*>(pShape.get());
+		if (!pConcreteShape) return nullptr;
+		return pConcreteShape;
+	}
+
+	Coords getMoveVector() override {
+		return moveVector;
+	}
+	void setMoveVector(Coords moveVector) override {
+		this->moveVector = moveVector;
+	}
+
+	float getSpeed() override {
+		return speed;
+	}
+	void setSpeed(float speed) override {
+		this->speed = speed;
+	}
+	void applyMoveVector(float deltaTime) override {
+		//lastTick
+	}
+	unsigned long long getLastTick() override { return lastTick; }
+	void setLastTick(unsigned long long lastTick) override { this->lastTick = lastTick; }
+
+	array<Coords, 4> getEnclosingRect(float& width, float& height) {
+		auto pShapes = getShapes();
+		return pShapes->getEnclosingRect(width, height);
+	}
+
+	void TickHandler(unsigned long long deltaTime) override {
+		// Check near the border
+		Coords pos = getPosition();
+		float width, height;
+		getEnclosingRect(width, height);
+		if (pos.x == 0 || pos.x == Application::getScreen()->getWidth() - width
+			|| pos.y == 0 || pos.y == Application::getScreen()->getHeight() - height) {
+			message(this, Messages::nearTheBorder());
+		}
+		////////
+
+		if (moveVector.x != 0 || moveVector.y != 0) {
+			float len = moveVector.getLength();
+			float moveDist = (deltaTime / 1000.0) * speed * len;
+			move(*Application::screen, moveVector.x * moveDist, moveVector.y * moveDist);
+		}
 	}
 };
 
@@ -241,7 +360,7 @@ class RectangleObject : public ViewObject {
   public:
 	using Point = shapes::Point;
 	RectangleObject(Point a, Point b, Point c, Point d) {
-		shared_ptr<shapes::IShape> pRect = make_shared<shapes::Rectangle>(a, b, c, d);
+		shared_ptr<shapes::IShape> pRect = make_shared<shapes::Rectangle>(this, a, b, c, d);
 		shared_ptr<shapes::ShapeCollection> pShapes = make_shared<shapes::ShapeCollection>();
 		pShapes->push_back(pRect);
 		//auto myObj = make_shared<ViewObject>();
@@ -253,10 +372,6 @@ class RectangleObject : public ViewObject {
 	RectangleObject() : RectangleObject(Point{}, Point{}, Point{}, Point{}) {
 
 	}
-
-	//void TickHandler(int tick) override {
-	//	
-	//}
 };
 
 template<class T = Object>

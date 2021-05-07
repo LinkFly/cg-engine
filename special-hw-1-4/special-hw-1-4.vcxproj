@@ -139,19 +139,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Collision.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="inequalities.cpp" />
+    <ClCompile Include="math-functions.cpp" />
     <ClCompile Include="Objects.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shapes.cpp" />
+    <ClCompile Include="errors-handler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Application.h" />
+    <ClInclude Include="Collision.h" />
+    <ClInclude Include="errors-handler.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="inequalities.h" />
+    <ClInclude Include="math-functions.h" />
     <ClInclude Include="Objects.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="Shapes.h" />
+    <ClInclude Include="shared-interface.h" />
+    <ClInclude Include="TransformMatrix.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
