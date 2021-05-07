@@ -325,6 +325,16 @@ class ViewObject : public IView, public IViewParent, public Object {
 			move(*Application::screen, moveVector.x * moveDist, moveVector.y * moveDist);
 		}
 	}
+
+	void setMinMaxByScreen() {
+		minX = 0;
+		minY = 0;
+		float width, height;
+		getEnclosingRect(width, height);
+		IScreen* pScreen = Application::getScreen();
+		maxX = pScreen->getWidth() - width;
+		maxY = pScreen->getHeight() - height;
+	}
 };
 
 class ObjectCollection : public IObjectCollection {

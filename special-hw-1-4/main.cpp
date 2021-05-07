@@ -47,6 +47,7 @@ struct Ball : public RectangleObject {
         /*speed = 100;*/
         addCollisionHandler(&callback);
 		addCollisionHandler(&nearTheBorderCallback);
+        setMinMaxByScreen();
     }
 
     void collideHandler(IView* obj, const string& message) {
@@ -162,6 +163,41 @@ int main()
     exit(0);*/
     //std::cout << '\xDB' << '\xDC' << '\xDF' << endl;
     Screen screen(50, 50);
+	Input input;
+    shared_ptr<ViewObject> myObj;
+	function<void(const vector<char>&, map<char, bool>)> handler =
+		[&myObj, &screen](const vector<char>& chars, map<char, bool> states) {
+		bool isPressed = false;
+		char chPressed = -1;
+		for (auto pair : states) {
+			if (pair.second) {
+				isPressed = true;
+				chPressed = pair.first;
+				break;
+			}
+		}
+		if (!isPressed) {
+			myObj->setDirection(0);
+			/*cout << "dir, ch: " << (int)myObj->getDirection() << ", " << chPressed << endl;*/
+			return;
+		}
+		static map<char, uint8_t> directions = {
+			{'d', 3},
+			{'a', 7},
+			{'w', 1},
+			{'s', 5},
+		};
+		auto itDir = directions.find(chPressed);
+		if (chPressed == 'd') {
+			/*cout << "test";*/
+		}
+		if (itDir != directions.end()) {
+			myObj->setDirection(itDir->second);
+		}
+		/*cout << "dir, ch: " << (int)myObj->getDirection() << ", " << itDir->first << endl;*/
+	};
+	input.add({ 'a', 'd', 'w', 's' }, handler);
+    Game game{ screen, input };
     //screen.set(3, 4, true);
     //screen.set(4, 4, true);
     //screen.set(3, 5, true);
@@ -197,7 +233,7 @@ int main()
         return make_tuple(factors[0] * move, factors[1] * move);
     };
 
-    auto myObj = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 10 });
+    myObj = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 10 });
 	static CollisionHandler nearTheBorderCallback = [](IView* obj, string message) {
         Coords pos = obj->getPosition();
         cout.setf(ios::fixed);
@@ -205,12 +241,7 @@ int main()
              << setprecision(2) << " pos: " << pos.x << ", " << pos.y << endl;
 	};
 	myObj->addCollisionHandler(&nearTheBorderCallback);
-    myObj->minX = 0;
-    myObj->minY = 0;
-    float width, height;
-    myObj->getEnclosingRect(width, height);
-    myObj->maxX = screen.getWidth() - width;
-    myObj->maxY = screen.getHeight() - height;
+    myObj->setMinMaxByScreen();
     /*myObj->speed = 100;*/
     /*myObj->direction = 4;*/
     //uint8_t direction = 0;
@@ -263,44 +294,10 @@ int main()
             //myObj->render(*pScrBuffer);
         }
     };
-
-    Input input;
-	function<void(const vector<char>&, map<char, bool>)> handler = 
-        [&myObj, &screen](const vector<char>& chars, map<char, bool> states) {
-            bool isPressed = false;
-            char chPressed = -1;
-            for(auto pair : states) {
-                if (pair.second) {
-                    isPressed = true;
-                    chPressed = pair.first;
-                    break;
-                }
-            }
-            if (!isPressed) {
-                myObj->setDirection(0);
-                /*cout << "dir, ch: " << (int)myObj->getDirection() << ", " << chPressed << endl;*/
-                return;
-            }
-            static map<char, uint8_t> directions = {
-                {'d', 3},
-                {'a', 7},
-                {'w', 1},
-                {'s', 5},
-            };
-            auto itDir = directions.find(chPressed);
-            if (chPressed == 'd') {
-                /*cout << "test";*/
-            }
-            if (itDir != directions.end()) {
-                myObj->setDirection(itDir->second);
-            }
-            /*cout << "dir, ch: " << (int)myObj->getDirection() << ", " << itDir->first << endl;*/
-	    };
-    input.add({'a', 'd', 'w', 's'}, handler);
 	/* input.add('d', handler);
 	 input.add('w', handler);
 	 input.add('s', handler);*/
-    Game game{screen, input};
+    
 
     /*shared_ptr<IShape> newLine = make_shared<Line>(Point{10, 10}, Point{20, 20});
     shared_ptr<ShapeCollection> pShapes = make_shared<ShapeCollection>();
@@ -309,6 +306,7 @@ int main()
     myObj->setShapes(pShapes);*/
     
     auto ball = make_shared<Ball>(screen);
+
     game.tree->getChildren()->add(myObj);
     game.tree->getChildren()->add(ball);
     game.run();
