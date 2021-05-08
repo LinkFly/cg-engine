@@ -252,37 +252,70 @@ class Line : public Shape {
 	}
 
 	void render(IScreen& screen) override {
-		//Coords coords = getPosition();
-		//Coords aPos = a.getPosition();
-		//Coords bPos = b.getPosition();
-		//aPos = position.apply(aPos);
-		//bPos = position.apply(bPos);
-		//aPos = getParent()->applyAllMatrixes(aPos);
-		//bPos = getParent()->applyAllMatrixes(bPos);
 		auto aPos = getAGlobalPosition();
 		auto bPos = getBGlobalPosition();
-		float width = abs(abs(bPos.x) - abs(aPos.x));
-		float height = abs(abs(bPos.y) - abs(aPos.y));
-		float maxLen = width > height ? width : height;
-		float xDiff = width / maxLen;
-		float yDiff = height / maxLen;
-		//float xLast = bPos.x, yLast = bPos.y;
-		auto nearEqual = [](float f1, float f2) {
-			return abs(abs(f2) - abs(f1)) <= 0.1;
-		};
-		if (aPos.x > bPos.x) {
-			xDiff = -xDiff;
+		float x1 = round(aPos.x);
+		float y1 = round(aPos.y);
+		float x2 = round(bPos.x);
+		float y2 = round(bPos.y);
+
+		float width = abs(x2 - x1);
+		float height = abs(y2 - y1);
+		float maxLen = max(width, height);
+
+		if (maxLen == 0) {
+			screen.set(x1, y1, color);
+			return;
 		}
-		if (aPos.y > bPos.y) {
-			yDiff = -yDiff;
-		}
-		for (float xCur = aPos.x, yCur = aPos.y; !nearEqual(xCur, bPos.x) || !nearEqual(yCur, bPos.y); xCur += xDiff, yCur += yDiff) {
-			int16_t x = static_cast<int16_t>(xCur);// || 1;
-			int16_t y = static_cast<int16_t>(yCur);// || 1;
-			if (x < 0 || y < 0) return;
+
+		float diffX = (x2 - x1) / maxLen;
+		float diffY = (y2 - y1) / maxLen;
+
+		float x = x1;
+		float y = y1;
+		maxLen++;
+		while (maxLen--) {
 			screen.set(x, y, color);
+			x += diffX;
+			y += diffY;
 		}
 	}
+	//void render(IScreen& screen) override {
+	//	//Coords coords = getPosition();
+	//	//Coords aPos = a.getPosition();
+	//	//Coords bPos = b.getPosition();
+	//	//aPos = position.apply(aPos);
+	//	//bPos = position.apply(bPos);
+	//	//aPos = getParent()->applyAllMatrixes(aPos);
+	//	//bPos = getParent()->applyAllMatrixes(bPos);
+	//	auto aPos = getAGlobalPosition();
+	//	auto bPos = getBGlobalPosition();
+	//	float width = abs(abs(bPos.x) - abs(aPos.x));
+	//	float height = abs(abs(bPos.y) - abs(aPos.y));
+	//	float maxLen = width > height ? width : height;
+	//	float xDiff = width / maxLen;
+	//	float yDiff = height / maxLen;
+	//	//float xLast = bPos.x, yLast = bPos.y;
+	//	auto nearEqual = [](float f1, float f2) {
+	//		return abs(abs(f2) - abs(f1)) <= 0.1;
+	//	};
+	//	if (aPos.x > bPos.x) {
+	//		xDiff = -xDiff;
+	//	}
+	//	if (aPos.y > bPos.y) {
+	//		yDiff = -yDiff;
+	//	}
+
+	//	//screen.set(x, y, color);
+	//	for (float xCur = aPos.x, yCur = aPos.y; !nearEqual(xCur, bPos.x) || !nearEqual(yCur, bPos.y); xCur += xDiff, yCur += yDiff) {
+	//		int16_t x = static_cast<int16_t>(xCur);// || 1;
+	//		int16_t y = static_cast<int16_t>(yCur);// || 1;
+	//		//int16_t x = static_cast<int16_t>(round(xCur));// || 1;
+	//		//int16_t y = static_cast<int16_t>(round(yCur));// || 1;
+	//		if (x < 0 || y < 0) return;
+	//		screen.set(x, y, color);
+	//	}
+	//}
 	shared_ptr<IInequality> getInequality() override {
 		return inequality;
 	}
@@ -317,11 +350,11 @@ class Line : public Shape {
 	float getWidth() override { 
 		auto newA = applyFullMatrixes(a.getPosition());
 		auto newB = applyFullMatrixes(b.getPosition());
-		return getDelta(newA.x, newB.x); }
+		return getDelta(newA.x, newB.x) + 1; }
 	float getHeight() override { 
 		auto newA = applyFullMatrixes(a.getPosition());
 		auto newB = applyFullMatrixes(b.getPosition());
-		return getDelta(newA.y, newB.y);
+		return getDelta(newA.y, newB.y) + 1;
 	}
 	array<Coords, 4> getEnclosingRect() override {
 		auto newA = applyFullMatrixes(a.getPosition());

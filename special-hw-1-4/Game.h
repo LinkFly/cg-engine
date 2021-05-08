@@ -3,6 +3,7 @@
 #include "Screen.h"
 #include "Objects.h"
 #include "Application.h"
+#include "Timer.h"
 
 #include <string>
 #include <vector>
@@ -97,7 +98,7 @@ class Input {
 	}
 };
 
-class Game : public IGame {
+class Game : public IGame, public Object {
 	queue<Event> events;
 	map<EventType, vector<EventCallback>> eventsHandlers;
 	Factory<Root> factory;
@@ -132,10 +133,10 @@ class Game : public IGame {
 		events.push(createTickEvent());
 	}
 	void handlerTreeInner(IScreen& screen, shared_ptr<IObject> pObject) {
+		if (!pObject) return;
+		pObject->Tick();
 		auto pObj = dynamic_cast<ViewObject*>(pObject.get());
 		if (pObj) {
-			//pObj->TickHandler(0);
-			pObj->Tick();
 			auto shapes = pObj->getShapes();
 			for (auto& shape : *shapes) {//auto it = shapes->begin(); it != shapes->end(); ++it) {
 				// TODO RESTORE IT!!!
@@ -173,7 +174,8 @@ class Game : public IGame {
 				if (pViewObj && pOtherViewObj) {
 					if (pViewObj->isCollide(*pOtherViewObj)) {
 						pViewObj->message(pOtherViewObj, Messages::collide());
-						pOtherViewObj->message(pViewObj, Messages::collide());	
+						if (pOtherViewObj->getEnabledCollision())
+							pOtherViewObj->message(pViewObj, Messages::collide());	
 					}
 				}
 				nestedCur++;
@@ -229,6 +231,11 @@ public:
 		addEventHandler(EventType::tick, tickHandler);
 		tree = factory.createObject();
 	}
+	shared_ptr<Timer> setTimer(int ms, function<void()> callback) {
+		auto timer = make_shared<Timer>(ms, callback);
+		add(timer);
+		return timer;
+	}
 	void run() {
 		mainLoop();
 	}
@@ -237,5 +244,11 @@ public:
 	}
 	void addEvent(Event& event) {
 		events.push(event);
+	}
+	void add(shared_ptr<IObject> obj) {
+		tree->getChildren()->add(obj);
+	}
+	void remove(shared_ptr<IObject> obj) {
+		tree->getChildren()->remove(obj);
 	}
 };

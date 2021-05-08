@@ -69,8 +69,10 @@ array<Coords, 4> getWrapRect(const TCoordsCollection& aCoords, float& width, flo
 	res[3] = { maxPtX.x, minPtY.y };
 	width = getDelta(maxPtX.x, minPtX.x);
 	height = getDelta(maxPtY.y, minPtY.y);
-	width || (width = 1);
-	height || (height = 1);
+	//width || (width = 1);
+	//height || (height = 1);
+	++width;
+	++height;
 	return res;
 	/*return array<Coords, 4>{};*/
 }

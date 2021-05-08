@@ -3,6 +3,7 @@
 #include "Shapes.h"
 #include "Application.h"
 #include "utils.h"
+#include "system-layer.h"
 
 #include <vector>
 #include <memory>
@@ -28,12 +29,7 @@ using CollisionHandler = function<void(IView*, string)>;
 
 struct IObject;
 
-struct IObjectCollection {
-	virtual size_t add(shared_ptr<IObject> obj) = 0;
-	virtual void remove(shared_ptr<IObject> obj) = 0;
-	virtual shared_ptr<IObject> get(size_t index) = 0;
-	virtual size_t size() = 0;
-};
+class IObjectCollection;
 
 struct ICollectionTree {
 	virtual shared_ptr<IObject> getParent() = 0;
@@ -50,6 +46,17 @@ struct IObject {//: public ICollectionTree {
 	virtual void setChildren(shared_ptr<IObjectCollection> position) = 0;
 	virtual void Tick() = 0;
 	virtual void TickHandler(unsigned long long deltaTime) = 0;
+	virtual void remove() = 0;
+	virtual void remove(shared_ptr<IObject> obj) = 0;
+	virtual void remove(IObject* pObj) = 0;
+};
+
+struct IObjectCollection {
+	virtual size_t add(shared_ptr<IObject> obj) = 0;
+	virtual shared_ptr<IObject> get(size_t index) = 0;
+	virtual size_t size() = 0;
+	virtual void remove(shared_ptr<IObject> obj) = 0;
+	virtual void remove(IObject* pObj) = 0;
 };
 
 struct IView {//: public ICollectionTree {
@@ -67,6 +74,8 @@ struct IView {//: public ICollectionTree {
 	virtual void applyMoveVector(float deltaTime) = 0;
 	virtual unsigned long long getLastTick() = 0;
 	virtual void setLastTick(unsigned long long) = 0;
+	virtual bool getEnabledCollision() = 0;
+	virtual void setEnabledCollision(bool bEnabled) = 0;
 };
 
 struct CreateObjectParams {
@@ -84,7 +93,11 @@ struct GlobalFactoryComponent {
 
 class ObjectCollection;
 
-class Object : public IObject {
+//class ObjectBase: public IObject {
+//
+//};
+
+class Object : public IObject/*, public ObjectBase*/ {
 	shared_ptr<IObject> parent;
 	shared_ptr<IObjectCollection> children;
 protected:
@@ -93,11 +106,15 @@ protected:
 	size_t id;
 	function<void(unsigned long long)> fnTickHandler;
 	Object(): 
-		children{static_pointer_cast<IObjectCollection>(make_shared<ObjectCollection>())},
 		id{ GlobalFactoryComponent::genId() }
 	{
+		auto pChildren = static_pointer_cast<IObjectCollection>(make_shared<ObjectCollection>(nullptr));
+		setChildren(pChildren);
 		static function<void(unsigned long long)> emptyFunction = [](unsigned long long) {};
 		fnTickHandler = emptyFunction;
+	}
+	Object(shared_ptr<IObjectCollection> pChildren) {
+		setChildren(children);
 	}
 
 	~Object() {
@@ -120,8 +137,8 @@ protected:
 	}
 	// Virtual methods
 	void Tick() override {
-		if (!lastTick) lastTick = GetTickCount64();
-		unsigned long long newTick = GetTickCount64();
+		if (!lastTick) lastTick = getTimeSinceRun();
+		unsigned long long newTick = getTimeSinceRun();
 		unsigned long long deltaTime = newTick - lastTick;
 		lastTick = newTick;
 		fnTickHandler(deltaTime);
@@ -129,6 +146,56 @@ protected:
 	}
 	void TickHandler(unsigned long long deltaTime) override {
 		
+	}
+	void remove(shared_ptr<IObject> obj) override {
+		//getChildren()->
+	}
+	void remove(IObject* pObj) override {
+
+	}
+	void remove() override {
+		getParent()->remove(this);
+	}
+};
+
+class ObjectCollection : public IObjectCollection, public Object, public enable_shared_from_this<ObjectCollection> {
+	map<size_t, shared_ptr<IObject>> objects;
+public:
+	ObjectCollection() = default;
+	ObjectCollection(shared_ptr<IObjectCollection> children): Object{nullptr} {}
+	shared_ptr<ObjectCollection> getPtr() {
+		return shared_from_this();
+	}
+	size_t add(shared_ptr<IObject> obj) override {
+		size_t id = obj->getId();
+		objects[id] = obj;
+		/*obj->setParent(shared_ptr<decltype(*this)>{this});*/
+		//shared_ptr<decltype(*this)> pThis{this};
+		shared_ptr<IObject> pThis = static_pointer_cast<IObject>(getPtr());
+		obj->setParent(pThis);
+		return id;
+	}
+	void remove(shared_ptr<IObject> obj) override {
+		objects.erase(obj->getId());
+	}
+	void remove(IObject* pObj) override {
+		objects.erase(pObj->getId());
+	}
+	shared_ptr<IObject> get(size_t index) override {
+		size_t curIdx = 0;
+		for (auto it = objects.begin(); it != objects.end(); ++it) {
+			if (curIdx == index)
+				return it->second;
+			else ++curIdx;
+		}
+		return nullptr;
+		/*auto it = objects.find(index);
+		if (it != objects.end()) {
+			return it->second;
+		} else return nullptr;*/
+	}
+	size_t size() override {
+		return objects.size();
 	}
 };
 
@@ -145,9 +212,10 @@ class ViewObject : public IView, public IViewParent, public Object {
 	shared_ptr<shapes::ShapeCollection> pShapes;
 	uint8_t direction = 0;
 	TranslationMatrix matrix;
-	vector<CollisionHandler*> collisionHandlers;
+	map<Message, vector<CollisionHandler*>> collisionHandlers;
 	Coords moveVector{};
   public:
+	bool bEnableCollision = true;
 	Option<float> minX, maxX, minY, maxY;
 	float speed = 50;
 	TranslationMatrix& getMatrix() override { return matrix; }
@@ -244,6 +312,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 	}
 
 	bool isCollide(IView& other) override {
+		if (!bEnableCollision) return false;
 		auto shapes = this->getShapes();
 		auto otherShapes = other.getShapes();
 		for (auto& shape : *shapes) {
@@ -261,13 +330,14 @@ class ViewObject : public IView, public IViewParent, public Object {
 
 	void message(IView* object, string message) override {
 		//if (object != this) {
-			for (auto& handler : collisionHandlers) {
-				(*handler)(object, message);
-			}
+			if (message == Messages::collide())
+				for (auto& handler : collisionHandlers[message]) {
+					(*handler)(object, message);
+				}
 		//}
 	}
 	void addCollisionHandler(CollisionHandler* callback) {
-		collisionHandlers.push_back(callback);
+		collisionHandlers[Messages::collide()].push_back(callback);
 	}
 
 	shared_ptr<IShape> getFirstShape() override {
@@ -335,34 +405,12 @@ class ViewObject : public IView, public IViewParent, public Object {
 		maxX = pScreen->getWidth() - width;
 		maxY = pScreen->getHeight() - height;
 	}
-};
 
-class ObjectCollection : public IObjectCollection {
-	map<size_t, shared_ptr<IObject>> objects;
-  public:
-	size_t add(shared_ptr<IObject> obj) override {
-		size_t id = obj->getId();
-		objects[id] = obj;
-		return id;
+	bool getEnabledCollision() override {
+		return bEnableCollision;
 	}
-	void remove(shared_ptr<IObject> obj) override {
-		objects.erase(obj->getId());
-	}
-	shared_ptr<IObject> get(size_t index) override {
-		size_t curIdx = 0;
-		for (auto it = objects.begin(); it != objects.end(); ++it) {
-			if (curIdx == index)
-				return it->second;
-			else ++curIdx;
-		}
-		return nullptr;
-		/*auto it = objects.find(index);
-		if (it != objects.end()) {
-			return it->second;
-		} else return nullptr;*/
-	}
-	size_t size() override {
-		return objects.size();
+	void setEnabledCollision(bool bEnabled) override {
+		bEnableCollision = bEnabled;
 	}
 };
 

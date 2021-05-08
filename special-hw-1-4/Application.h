@@ -4,9 +4,18 @@
 
 #include <string>
 
+struct Message: public string {
+	Message(const string& string) {
+		this->clear();
+		this->append(string);
+	}
+	Message(const char* msg) {
+		*this = string{msg};
+	}
+};
 struct Messages {
-	static string collide() { static string message = "collide"; return message; }
-	static string nearTheBorder() { static string message = "near-the-border"; return message; }
+	static string collide() { static Message message = "collide"; return message; }
+	static string nearTheBorder() { static Message message = "near-the-border"; return message; }
 };
 
 struct Application {

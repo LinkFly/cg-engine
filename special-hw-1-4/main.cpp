@@ -5,6 +5,7 @@
 #include "Shapes.h"
 #include "Objects.h"
 #include "Game.h"
+#include "Timer.h"
 
 #include "inequalities.h"
 #include "Collision.h"
@@ -67,6 +68,11 @@ struct Ball : public RectangleObject {
                 direction = (direction % 2) + 1;
                 //direction = 2;
             }
+            bEnableCollision = false;
+			Game::game->setTimer(1000, [this]() {
+				cout << "=======================================[Ball] It will be enable collision" << endl;
+                bEnableCollision = true;
+				});
         }	
     }
 
@@ -233,7 +239,7 @@ int main()
         return make_tuple(factors[0] * move, factors[1] * move);
     };
 
-    myObj = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 10 });
+    myObj = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 9 });
 	static CollisionHandler nearTheBorderCallback = [](IView* obj, string message) {
         Coords pos = obj->getPosition();
         cout.setf(ios::fixed);
@@ -306,7 +312,7 @@ int main()
     myObj->setShapes(pShapes);*/
     
     auto ball = make_shared<Ball>(screen);
-
+    /*ball->bEnableCollision = false;*/
     game.tree->getChildren()->add(myObj);
     game.tree->getChildren()->add(ball);
     game.run();
