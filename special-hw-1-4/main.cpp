@@ -41,13 +41,14 @@ struct Ball : public RectangleObject {
     Screen& screen;
     int direction = 1;
     Ball(Screen& screen): screen{screen}, RectangleObject{{0, 0}, {2, 0}, {2, 2}, {0, 2}} {
-        static CollisionHandler callback = [this](IView* obj, string message) { collideHandler(obj, Messages::collide()); };
-        static CollisionHandler nearTheBorderCallback = [this](IView* obj, string message) { 
-            nearTheBorderHandler(obj, Messages::nearTheBorder());
+        static CollisionHandler callback = [this](IView* obj, string message, const MessageData* data) { collideHandler(obj, Messages::collide()); };
+        static CollisionHandler nearTheBorderCallback = [this](IView* obj, string message, const MessageData* pData) {
+            decltype(auto) msgData = const_cast<MessageData&>(*pData).getSuccessor<BordersMessageData>();
+            nearTheBorderHandler(obj, Messages::nearTheBorder(), msgData);  
             };
         /*speed = 100;*/
         addCollisionHandler(&callback);
-		addCollisionHandler(&nearTheBorderCallback);
+		addHandler(Messages::nearTheBorder(), &nearTheBorderCallback);
         setMinMaxByScreen();
     }
 
@@ -76,7 +77,7 @@ struct Ball : public RectangleObject {
         }	
     }
 
-    void nearTheBorderHandler(IView* obj, const string& message) {
+    void nearTheBorderHandler(IView* obj, const string& message, const BordersMessageData& bordersData) {
         cout << "\n\n nearTheBorder pos: " << obj->getPosition().x << ", " << obj->getPosition().y << endl;
     }
 
@@ -240,7 +241,7 @@ int main()
     };
 
     myObj = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 9 });
-	static CollisionHandler nearTheBorderCallback = [](IView* obj, string message) {
+	static CollisionHandler nearTheBorderCallback = [](IView* obj, string message, const MessageData* pData) {
         Coords pos = obj->getPosition();
         cout.setf(ios::fixed);
 		cout << "=================================[LineObject] message: " << message 

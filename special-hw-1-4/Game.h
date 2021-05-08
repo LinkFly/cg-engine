@@ -220,6 +220,7 @@ public:
 	static Game* game;
 	shared_ptr<Root> tree;
 	Game(IScreen& screen, Input& input): input{input} {
+		Application::hideCursor();
 		Application::setScreen(&screen);
 		game = this;
 		tickHandler = [this, &screen](Event& event) {
@@ -248,7 +249,7 @@ public:
 	void add(shared_ptr<IObject> obj) {
 		tree->getChildren()->add(obj);
 	}
-	void remove(shared_ptr<IObject> obj) {
+	void remove(shared_ptr<IObject> obj) override {
 		tree->getChildren()->remove(obj);
 	}
 };

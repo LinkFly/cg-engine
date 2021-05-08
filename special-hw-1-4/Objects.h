@@ -25,7 +25,7 @@ using ShapeCollection = shapes::ShapeCollection;
 using Point = shapes::Point;
 using IShape = shapes::IShape;
 using Line = shapes::Line;
-using CollisionHandler = function<void(IView*, string)>;
+using CollisionHandler = function<void(IView*, string, const MessageData*)>;
 
 struct IObject;
 
@@ -66,7 +66,7 @@ struct IView {//: public ICollectionTree {
 	virtual void setShapes(shared_ptr<ShapeCollection> pShapes) = 0;
 	virtual bool isCollide(IView& other) = 0;
 	virtual shared_ptr<IShape> getFirstShape() = 0;
-	virtual void message(IView* from, string message) = 0;
+	virtual void message(IView* from, string message, const MessageData& data = MessageData{}) = 0;
 	virtual Coords getMoveVector() = 0;
 	virtual void setMoveVector(Coords moveVector) = 0;
 	virtual float getSpeed() = 0;
@@ -215,6 +215,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 	map<Message, vector<CollisionHandler*>> collisionHandlers;
 	Coords moveVector{};
   public:
+	bool bReqUpdate = true;
 	bool bEnableCollision = true;
 	Option<float> minX, maxX, minY, maxY;
 	float speed = 50;
@@ -250,6 +251,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 		/*return position;*/
 	}
 	void setPosition(Coords position) override {
+		
 		this->position = position;
 		auto shapes = getShapes();
 		for (auto& shape : *shapes) {
@@ -328,16 +330,20 @@ class ViewObject : public IView, public IViewParent, public Object {
 		return false;
 	}
 
-	void message(IView* object, string message) override {
-		//if (object != this) {
-			if (message == Messages::collide())
-				for (auto& handler : collisionHandlers[message]) {
-					(*handler)(object, message);
-				}
-		//}
+	// TODO message from string to Message
+	void message(IView* object, string message, const MessageData& data = MessageData{}) override {
+		auto it = collisionHandlers.find(message);
+		if (it != collisionHandlers.end()) {
+			for (auto& handler : collisionHandlers[it->first]) {
+				(*handler)(object, it->first, &data);
+			}
+		}
 	}
 	void addCollisionHandler(CollisionHandler* callback) {
 		collisionHandlers[Messages::collide()].push_back(callback);
+	}
+	void addHandler(const Message& msg, CollisionHandler* callback) {
+		collisionHandlers[msg].push_back(callback);
 	}
 
 	shared_ptr<IShape> getFirstShape() override {
@@ -383,9 +389,20 @@ class ViewObject : public IView, public IViewParent, public Object {
 		Coords pos = getPosition();
 		float width, height;
 		getEnclosingRect(width, height);
-		if (pos.x == 0 || pos.x == Application::getScreen()->getWidth() - width
-			|| pos.y == 0 || pos.y == Application::getScreen()->getHeight() - height) {
-			message(this, Messages::nearTheBorder());
+		BordersMessageData bBorderData;
+		if (pos.x == 0) 
+			bBorderData.bLeft = true;
+		if (pos.x == Application::getScreen()->getWidth() - width) 
+			bBorderData.bRight = true;
+		if (pos.y == 0) 
+			bBorderData.bTop = true;
+		if (pos.y == Application::getScreen()->getHeight() - height)
+			bBorderData.bBottom = true;
+		auto borders = bBorderData.getBorders();
+		if (!borders.empty()) {
+		/*if (pos.x == 0 || pos.x == Application::getScreen()->getWidth() - width
+			|| pos.y == 0 || pos.y == Application::getScreen()->getHeight() - height) {*/
+			message(this, Messages::nearTheBorder(), bBorderData);
 		}
 		////////
 
