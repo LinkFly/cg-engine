@@ -1,6 +1,6 @@
 #include "Screen.h"
 #include "Game.h"
-#include "Shapes.h"
+#include "graphics/Shapes.h"
 
 #include <vector>
 #include <iostream>

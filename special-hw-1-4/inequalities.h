@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math-functions.h"
+#include "helpers/math-functions.h"
 
 #include <cstdint>
 #include <cmath>

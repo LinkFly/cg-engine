@@ -1,5 +1,5 @@
 #include "inequalities.h"
-#include "math-functions.h"
+#include "helpers/math-functions.h"
 
 bool isCollide(TriangleInequality& other)
 {

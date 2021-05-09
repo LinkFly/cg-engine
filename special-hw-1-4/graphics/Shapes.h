@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Screen.h"
+#include "../Screen.h"
 
 //deprecated
-#include "inequalities.h"
+#include "../inequalities.h"
 
-#include "Collision.h"
-#include "TransformMatrix.h"
-#include "shared-interface.h"
-#include "errors-handler.h"
+#include "../Collision.h"
+#include "../TransformMatrix.h"
+#include "../shared-interface.h"
+#include "../helpers/errors-handler.h"
 
 #include <cmath>
 #include <initializer_list>

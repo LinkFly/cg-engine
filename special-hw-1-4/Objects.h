@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Shapes.h"
+#include "graphics/Shapes.h"
 #include "Application.h"
-#include "utils.h"
-#include "system-layer.h"
+#include "helpers/utils.h"
+#include "helpers/system-layer.h"
 
 #include <vector>
 #include <memory>

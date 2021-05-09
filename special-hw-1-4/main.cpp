@@ -2,7 +2,7 @@
 //
 
 #include "Screen.h"
-#include "Shapes.h"
+#include "graphics/Shapes.h"
 #include "Objects.h"
 #include "Game.h"
 #include "Timer.h"
