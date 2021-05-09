@@ -62,6 +62,7 @@ struct Application {
 		Application::screen = screen;
 	}
 	static void hideCursor() {
-		ShowConsoleCursor(false);
+		showConsoleCursor(false);
 	}
+	static void pause() { pause(); }
 };

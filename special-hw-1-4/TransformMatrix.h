@@ -7,8 +7,9 @@
 using namespace std;
 
 struct TranslationMatrix : array<float, 3 * 3> {
-	static void fillMatrix(TranslationMatrix& matrix, float ar[3 * 3]) {
-		for (size_t i = 0; i < sizeof(float[3 * 3]) / sizeof(ar[0]); ++i)
+	template<class T>
+	static void fillMatrix(TranslationMatrix& matrix, T ar[3 * 3]) {
+		for (size_t i = 0; i < sizeof(T[3 * 3]) / sizeof(ar[0]); ++i)
 			matrix[i] = ar[i];
 	}
 	static TranslationMatrix getMoveMatrix(Coords coords) {
@@ -43,6 +44,17 @@ struct TranslationMatrix : array<float, 3 * 3> {
 	TranslationMatrix(float ar[3 * 3]) {
 		fillMatrix(*this, ar);
 	}
+	TranslationMatrix(int ar[3 * 3]) {
+		fillMatrix(*this, ar);
+	}
+	//TranslationMatrix(const array<T, 3*3>& ar) { //array<T, 3 * 3>
+	////TranslationMatrix(initializer_list<T> init) {
+	//TranslationMatrix(int ar[3 * 3]) {
+	//	//for (int i = 0; i < 9; ++i) {
+	//	//	(*this) = static_cast<float>(init[i]);
+	//	//}
+	//	fillMatrix(*this, ar);
+	//}
 
 	TranslationMatrix(float deltaX, float deltaY) {
 		*this = getMoveMatrix({ deltaX, deltaY });

@@ -6,4 +6,6 @@
 using namespace std;
 
 unsigned long long getTimeSinceRun();
-bool ShowConsoleCursor(bool bShow);
+bool showConsoleCursor(bool bShow);
+void clearConsole();
+void pause();

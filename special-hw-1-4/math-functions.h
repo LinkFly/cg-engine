@@ -14,6 +14,17 @@ struct Coords {
 	Coords(float x, float y): x{x}, y{y} {}
 	Coords round() { return {std::round(x), std::round(y) }; }
 	float getLength();
+	Coords operator*(float factor) {
+		return {x * factor, y * factor};
+	}
+	Coords applyNewBasis(Coords newBasisI, Coords newBasisJ) {
+	/*
+	x*i^ +^ y*j^
+	(x*ix, x*iy) +^ (y*jx, y*jy)
+	= (x*ix + y*jx, x*iy + y*jy
+	*/
+		return {x * newBasisI.x + y * newBasisJ.x, x * newBasisI.y + y * newBasisJ.y};
+	}
 	friend bool operator==(const Coords& coords1, const Coords& Coordss2);
 };
 

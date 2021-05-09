@@ -15,7 +15,10 @@
 #include <map>
 #include <set>
 #include <array>
+#include <cstdlib>
+#include <ctime>
 
+//////
 #include <conio.h>
 #include <windows.h>
 
@@ -104,11 +107,12 @@ class Game : public IGame, public Object {
 	Factory<Root> factory;
 	Input& input;
 
+	
 	void sleep(int ms) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 	}
 	void mainLoop() {
-		while (true) {
+		while (!bStop) {
 			while (!events.empty()) {
 				Event event = events.front();
 				events.pop();
@@ -118,7 +122,7 @@ class Game : public IGame, public Object {
 				}
 			}
 			addTickEvent();
-			sleep(10);
+			/*sleep(1);*/
 		}
 	}
 	EventCallback tickHandler;
@@ -219,9 +223,11 @@ class Game : public IGame, public Object {
 public:
 	static Game* game;
 	shared_ptr<Root> tree;
+	bool bStop = false;
 	Game(IScreen& screen, Input& input): input{input} {
 		Application::hideCursor();
 		Application::setScreen(&screen);
+		initRandom();
 		game = this;
 		tickHandler = [this, &screen](Event& event) {
 			//cout << "[Tick] " << event.data.toString() << endl;
@@ -231,6 +237,9 @@ public:
 		};
 		addEventHandler(EventType::tick, tickHandler);
 		tree = factory.createObject();
+	}
+	void initRandom() {
+		srand(time(nullptr));
 	}
 	shared_ptr<Timer> setTimer(int ms, function<void()> callback) {
 		auto timer = make_shared<Timer>(ms, callback);
