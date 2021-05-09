@@ -58,8 +58,8 @@ struct Ball : public RectangleObject {
     }
 
     void setRandomPosition() {
-        float randomX = rand() % 30 + 10;
-        float randomY = rand() % 30 + 10;
+        float randomX = static_cast<short>(rand() % 30 + 10);
+		float randomY = static_cast<short>(rand() % 30 + 10);
         setPosition({randomX, randomY});
     }
     Coords createRepusliveVector() {
@@ -271,7 +271,7 @@ void run() {
 
 
 		/*deltaTime = 30;*/
-		float moveDist = pPlayer->speed * deltaTime / 1000.0;
+		float moveDist = (pPlayer->speed / 1000.0f) * deltaTime;
 
 		if (pPlayer->getDirection() != 0) {
 			if (pPlayer->getDirection() == 1) {

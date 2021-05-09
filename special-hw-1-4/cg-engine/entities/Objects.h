@@ -416,7 +416,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 
 		if (moveVector.x != 0 || moveVector.y != 0) {
 			float len = moveVector.getLength();
-			float moveDist = (deltaTime / 1000.0) * speed;
+			float moveDist = (deltaTime / 1000.0f) * speed;
 			move(*Application::screen, moveVector.x * moveDist, moveVector.y * moveDist);
 		}
 	}

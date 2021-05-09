@@ -12,7 +12,7 @@ namespace cgEngine {
 class Timer : public Object {
   public:
 	int ms;
-	unsigned accum = 0;
+	int accum = 0;
 	bool bRepeat;
 	bool bStop = false;
 	function<void()> callback;

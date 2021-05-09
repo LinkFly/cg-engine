@@ -241,7 +241,7 @@ public:
 		tree = factory.createObject();
 	}
 	void initRandom() {
-		srand(time(nullptr));
+		srand(static_cast<unsigned int>(time(nullptr)));
 	}
 	shared_ptr<Timer> setTimer(int ms, function<void()> callback) {
 		auto timer = make_shared<Timer>(ms, callback);

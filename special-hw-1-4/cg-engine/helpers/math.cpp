@@ -16,7 +16,7 @@ bool operator==(const Coords& coords1, const Coords& coords2)
 }
 
 bool nearZero(float val) {
-	static float customEpsilon = 0.01;
+	static float customEpsilon = 0.01f;
 	if (val >= 0) {
 		return val < customEpsilon;
 	}
@@ -292,7 +292,7 @@ float getDelta(float coord1, float coord2) {
 float getVectorLength(Coords pt1, Coords pt2) {
 	auto deltaX = getDelta(pt2.x, pt1.x);
 	auto deltaY = getDelta(pt2.y, pt1.y);
-	return sqrt(pow(deltaX, 2) + pow(deltaY, 2));
+	return static_cast<float>(sqrt(pow(deltaX, 2) + pow(deltaY, 2)));
 }
 
 float Coords::getLength() {

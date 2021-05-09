@@ -133,7 +133,7 @@ struct TransformMatrix : array<float, 3 * 3> {
 	TransformMatrix(float ar[3 * 3]) {
 		fillMatrix(*this, ar);
 	}
-	TransformMatrix(int ar[3 * 3]) {
+	TransformMatrix(short ar[3 * 3]) {
 		fillMatrix(*this, ar);
 	}
 
