@@ -139,30 +139,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Collision.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="inequalities.cpp" />
-    <ClCompile Include="math-functions.cpp" />
-    <ClCompile Include="Objects.cpp" />
-    <ClCompile Include="Screen.cpp" />
+    <ClCompile Include="cg-engine\global\Application.cpp" />
+    <ClCompile Include="cg-engine\entities\Collision.cpp" />
+    <ClCompile Include="cg-engine\global\Game.cpp" />
+    <ClCompile Include="cg-engine\helpers\math.cpp" />
+    <ClCompile Include="cg-engine\entities\Objects.cpp" />
+    <ClCompile Include="cg-engine\global\Screen.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Shapes.cpp" />
-    <ClCompile Include="errors-handler.cpp" />
+    <ClCompile Include="cg-engine\graphics\Shapes.cpp" />
+    <ClCompile Include="cg-engine\helpers\errors-handler.cpp" />
+    <ClCompile Include="cg-engine\helpers\system-layer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="Collision.h" />
-    <ClInclude Include="errors-handler.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="inequalities.h" />
-    <ClInclude Include="math-functions.h" />
-    <ClInclude Include="Objects.h" />
-    <ClInclude Include="Screen.h" />
-    <ClInclude Include="Shapes.h" />
-    <ClInclude Include="shared-interface.h" />
-    <ClInclude Include="TransformMatrix.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="cg-engine\global\Application.h" />
+    <ClInclude Include="cg-engine\cg-engine.h" />
+    <ClInclude Include="cg-engine\entities\Collision.h" />
+    <ClInclude Include="cg-engine\helpers\errors-handler.h" />
+    <ClInclude Include="cg-engine\global\Game.h" />
+    <ClInclude Include="cg-engine\helpers\math.h" />
+    <ClInclude Include="cg-engine\entities\messages.h" />
+    <ClInclude Include="cg-engine\entities\Objects.h" />
+    <ClInclude Include="cg-engine\global\Screen.h" />
+    <ClInclude Include="cg-engine\graphics\Shapes.h" />
+    <ClInclude Include="cg-engine\helpers\system-layer.h" />
+    <ClInclude Include="cg-engine\entities\Timer.h" />
+    <ClInclude Include="cg-engine\helpers\utils.h" />
+    <ClInclude Include="cg-engine\interface\common-interface.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,72 +15,78 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Screen.cpp">
+    <ClCompile Include="cg-engine\global\Screen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shapes.cpp">
+    <ClCompile Include="cg-engine\graphics\Shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
+    <ClCompile Include="cg-engine\global\Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="inequalities.cpp">
+    <ClCompile Include="cg-engine\entities\Objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects.cpp">
+    <ClCompile Include="cg-engine\helpers\math.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="math-functions.cpp">
+    <ClCompile Include="cg-engine\entities\Collision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Collision.cpp">
+    <ClCompile Include="cg-engine\helpers\errors-handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="errors-handler.cpp">
+    <ClCompile Include="cg-engine\global\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Application.cpp">
+    <ClCompile Include="cg-engine\helpers\system-layer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Screen.h">
+    <ClInclude Include="cg-engine\global\Screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="cg-engine\global\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shapes.h">
+    <ClInclude Include="cg-engine\graphics\Shapes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects.h">
+    <ClInclude Include="cg-engine\entities\Objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inequalities.h">
+    <ClInclude Include="cg-engine\helpers\math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="math-functions.h">
+    <ClInclude Include="cg-engine\entities\Collision.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Collision.h">
+    <ClInclude Include="cg-engine\helpers\errors-handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="errors-handler.h">
+    <ClInclude Include="cg-engine\global\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="shared-interface.h">
+    <ClInclude Include="cg-engine\helpers\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TransformMatrix.h">
+    <ClInclude Include="cg-engine\entities\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Application.h">
+    <ClInclude Include="cg-engine\helpers\system-layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="utils.h">
+    <ClInclude Include="cg-engine\entities\messages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cg-engine\cg-engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cg-engine\interface\common-interface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
