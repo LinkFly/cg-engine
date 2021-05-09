@@ -1,18 +1,19 @@
 #pragma once
 
-#include "Screen.h"
-#include "errors-handler.h"
-#include "system-layer.h"
-
 #include <string>
+#include <vector>
 
-struct Message: public string {
+using namespace std;
+
+namespace cgEngine {
+
+struct Message : public string {
 	Message(const string& string) {
 		this->clear();
 		this->append(string);
 	}
 	Message(const char* msg) {
-		*this = string{msg};
+		*this = string{ msg };
 	}
 };
 
@@ -24,9 +25,9 @@ struct MessageData {
 			showError("Bad casting message data to this successor");
 		return *pThis;
 	}
-  private:
-    // Defining it as polymorphic type
-	  virtual void stub() {}
+private:
+	// Defining it as polymorphic type
+	virtual void stub() {}
 };
 
 enum class Border {
@@ -53,16 +54,4 @@ struct Messages {
 	static string nearTheBorder() { static Message message = "near-the-border"; return message; }
 };
 
-struct Application {
-	static IScreen* screen;
-	static IScreen* getScreen() {
-		return screen;
-	}
-	static void setScreen(IScreen* screen) {
-		Application::screen = screen;
-	}
-	static void hideCursor() {
-		showConsoleCursor(false);
-	}
-	static void pause() { pause(); }
-};
+}

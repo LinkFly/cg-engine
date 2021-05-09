@@ -1,9 +1,9 @@
 #pragma once
 
-#include "graphics/Shapes.h"
-#include "Application.h"
-#include "helpers/utils.h"
-#include "helpers/system-layer.h"
+#include "../graphics/Shapes.h"
+#include "../global/Application.h"
+#include "../helpers/utils.h"
+#include "../helpers/system-layer.h"
 
 #include <vector>
 #include <memory>
@@ -19,7 +19,9 @@
 
 using namespace std;
 
-class IView;
+namespace cgEngine {
+
+struct IView;
 
 using ShapeCollection = shapes::ShapeCollection;
 using Point = shapes::Point;
@@ -29,7 +31,7 @@ using EventHandler = function<void(IView*, const Message&, const MessageData*)>;
 
 struct IObject;
 
-class IObjectCollection;
+struct IObjectCollection;
 
 struct ICollectionTree {
 	virtual shared_ptr<IObject> getParent() = 0;
@@ -52,6 +54,7 @@ struct IObject {//: public ICollectionTree {
 };
 
 struct IObjectCollection {
+public:
 	virtual size_t add(shared_ptr<IObject> obj) = 0;
 	virtual shared_ptr<IObject> get(size_t index) = 0;
 	virtual size_t size() = 0;
@@ -59,7 +62,7 @@ struct IObjectCollection {
 	virtual void remove(IObject* pObj) = 0;
 };
 
-struct IView {//: public ICollectionTree {
+struct IView {
 	virtual Coords getPosition() = 0;
 	virtual void setPosition(Coords position) = 0;
 	virtual shared_ptr<ShapeCollection> getShapes() = 0;
@@ -79,10 +82,6 @@ struct IView {//: public ICollectionTree {
 	virtual void setMoveVector(float x, float y) = 0;
 };
 
-struct CreateObjectParams {
-
-};
-
 // TODO make singleton
 struct GlobalFactoryComponent {
 	static map<size_t, IObject*> allViewObjects;
@@ -98,6 +97,15 @@ class ObjectCollection;
 //
 //};
 
+namespace test1 {
+	namespace test2 {
+		struct SomeObject {
+			SomeObject() {
+				cout << "SSSSSSSSSSSSS" << endl;
+			}
+		};
+	}
+}
 class Object : public IObject/*, public ObjectBase*/ {
 	shared_ptr<IObject> parent;
 	shared_ptr<IObjectCollection> children;
@@ -212,7 +220,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 	Coords position;
 	shared_ptr<shapes::ShapeCollection> pShapes;
 	uint8_t direction = 0;
-	TranslationMatrix matrix;
+	TransformMatrix matrix;
 	map<Message, vector<EventHandler*>> eventsHandlers;
 	Coords moveVector{};
   public:
@@ -220,7 +228,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 	bool bEnableCollision = true;
 	Option<float> minX, maxX, minY, maxY;
 	float speed = 50;
-	TranslationMatrix& getMatrix() override { return matrix; }
+	TransformMatrix& getMatrix() override { return matrix; }
 	Coords applyAllMatrixes(Coords coords) override {
 		auto res = getMatrix().apply(coords);
 		auto pObj = getParent();
@@ -239,7 +247,7 @@ class ViewObject : public IView, public IViewParent, public Object {
 	ViewObject(): 
 			pShapes{make_shared<shapes::ShapeCollection>()},
 			position{0, 0}, 
-			matrix{TranslationMatrix::getUnitMatrix()}
+			matrix{TransformMatrix::getUnitMatrix()}
 	{
 		GlobalFactoryComponent::allViewObjects[id] = this;
 	}
@@ -320,10 +328,6 @@ class ViewObject : public IView, public IViewParent, public Object {
 		auto otherShapes = other.getShapes();
 		for (auto& shape : *shapes) {
 			for (auto& otherShape : *otherShapes) {
-				//if (shape->)
-				/*auto inequality = otherShape->getInequality();
-				if (shape->getInequality()->isCollide(*inequality))
-					return true;*/
 				if (shape->isCollide(otherShape.get()))
 					return true;
 			}
@@ -453,6 +457,9 @@ class RectangleObject : public ViewObject {
 	}
 };
 
+struct CreateObjectParams {
+
+};
 template<class T = Object>
 struct IFactory {
 	virtual shared_ptr<T> createObject() = 0;
@@ -495,3 +502,5 @@ class Builder {
 	//	return myObj;
 	//}
 };
+
+}

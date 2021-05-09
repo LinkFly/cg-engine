@@ -6,6 +6,7 @@
 //	return false;
 //}
 
+namespace cgEngine {
 namespace shapes {
 
 	bool Point::isCollide(IShape* other) {
@@ -37,4 +38,6 @@ namespace shapes {
 		if (pRect) return polylineCollision.isCollide(pRect->polylineCollision);
 		return false;
 	}
+}
+
 }

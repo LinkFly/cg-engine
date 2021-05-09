@@ -1,14 +1,15 @@
 #pragma once
 
-#include "math-functions.h"
-#include "errors-handler.h"
-#include "TransformMatrix.h"
+#include "../helpers/math.h"
+#include "../helpers/errors-handler.h"
 
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <array>
 #include <functional>
+
+namespace cgEngine {
 
 using namespace std;
 
@@ -124,7 +125,7 @@ class Collision: public BaseCollision {
 		if (pPoint) return pPoint->isCollideInternal<PointCollision>(collision);
 		
 	}
-	void applyMatrix(const TranslationMatrix& matrix) {
+	void applyMatrix(const TransformMatrix& matrix) {
 		static_cast<TSuccessorCollision*>(this)->applyMatrixImpl(matrix);
 	}
 };
@@ -142,7 +143,7 @@ class PointCollision : public Collision<PointCollision> {
 	PointCollision(Coords pt) : ptEq{pt} {
 	}
 
-	void applyMatrixImpl(const TranslationMatrix& matrix) {
+	void applyMatrixImpl(const TransformMatrix& matrix) {
 		ptEq.init(matrix.apply(ptEq.getCoords()));
 	}
 	void init(Coords coords) { ptEq.init(coords.round()); }
@@ -170,7 +171,7 @@ public:
 	}
 	LineCollision(Coords a, Coords b): lineEq{LineEquation{a, b}} {}
 
-	void applyMatrixImpl(const TranslationMatrix& matrix) {
+	void applyMatrixImpl(const TransformMatrix& matrix) {
 		lineEq.init(matrix.apply(lineEq.pt1), matrix.apply(lineEq.pt2));
 	}
 	void init(Coords a, Coords b) { lineEq.init(a.round(), b.round()); }
@@ -219,7 +220,7 @@ class TriangleCollision: public Collision<TriangleCollision> {
 		bc = {a.round(), c.round() };
 		ca = {c.round(), a.round() };
 	}
-	void applyMatrixImpl(const TranslationMatrix& matrix) {
+	void applyMatrixImpl(const TransformMatrix& matrix) {
 		ab.applyMatrixImpl(matrix);
 		bc.applyMatrixImpl(matrix);
 		ca.applyMatrixImpl(matrix);
@@ -263,7 +264,7 @@ class PolylineCollision : public Collision<PolylineCollision> {
 		}
 	}
 
-	void applyMatrixImpl(const TranslationMatrix& matrix) {
+	void applyMatrixImpl(const TransformMatrix& matrix) {
 		for (auto& line : lines) {
 			line.applyMatrixImpl(matrix);
 		}
@@ -293,34 +294,4 @@ class PolylineCollision : public Collision<PolylineCollision> {
 	}
 };
 
-//bool PointCollision::isCollideImplementation(const LineCollision& other) {
-//	return const_cast<LineCollision&>(other).isCollideImplementation(*this);
-//}
-//bool PointCollision::isCollideImplementation(const TriangleCollision& other) {
-//	return const_cast<TriangleCollision&>(other).isCollideImplementation(*this);
-//}
-//bool PointCollision::isCollideImplementation(const PolylineCollision& other) {
-//	return const_cast<PolylineCollision&>(other).isCollideImplementation(*this);
-//}
-
-//bool LineCollision::isCollideImplementation(const TriangleCollision& other) {
-//	return const_cast<TriangleCollision&>(other).isCollideImplementation(*this);
-//}
-//bool LineCollision::isCollideImplementation(const PolylineCollision& other) {
-//	return const_cast<PolylineCollision&>(other).isCollideImplementation(*this);
-//}
-//
-//bool TriangleCollision::isCollideImplementation(const PolylineCollision& other) {
-//	return const_cast<PolylineCollision&>(other).isCollideImplementation(*this);
-//}
-
-/////////////////////////////////////////
-//class CollisionDetector {
-//	//T collision;
-//  public:
-//    template<class T, class U>
-//	bool isCollide(T cLeft, U cRight) {
-//		return cLeft.isCollide(cRight);
-//	}
-//	
-//};
+}

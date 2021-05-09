@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace cgEngine {
+
 class Timer : public Object {
   public:
 	int ms;
@@ -29,3 +31,5 @@ class Timer : public Object {
 		};
 	}
 };
+
+}

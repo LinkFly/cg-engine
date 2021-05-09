@@ -4,6 +4,8 @@
 
 #include <functional>
 
+namespace cgEngine {
+
 using namespace std;
 
 template<class T>
@@ -27,4 +29,6 @@ constexpr T clamp(T v, T lo, T hi, CompareLess comp = std::less<T>{})
 {
 	/*assert(!comp(hi, lo));*/
 	return comp(v, lo) ? lo : comp(hi, v) ? hi : v;
+}
+
 }

@@ -1,5 +1,7 @@
 #include "system-layer.h"
 
+namespace cgEngine {
+
 unsigned long long getTimeSinceRun() { return GetTickCount64(); }
 
 bool showConsoleCursor(bool bShow)
@@ -57,4 +59,6 @@ void clearConsole()
 
 void pause() {
 	system("pause");
+}
+
 }

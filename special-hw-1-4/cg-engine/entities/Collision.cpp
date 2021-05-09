@@ -1,5 +1,7 @@
 #include "Collision.h"
 
+namespace cgEngine {
+
 bool PointCollision::isCollideImplementation(const PointCollision& other) {
 	return ptEq.x == other.ptEq.x && ptEq.y == other.ptEq.y;
 }
@@ -23,4 +25,6 @@ bool LineCollision::isCollideImplementation(const PolylineCollision& other) {
 
 bool TriangleCollision::isCollideImplementation(const PolylineCollision& other) {
 	return const_cast<PolylineCollision&>(other).isCollideImplementation(*this);
+}
+
 }

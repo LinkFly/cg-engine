@@ -1,48 +1,39 @@
 #pragma once
 
-#include "../Screen.h"
-
-//deprecated
-#include "../inequalities.h"
-
-#include "../Collision.h"
-#include "../TransformMatrix.h"
-#include "../shared-interface.h"
+#include "../global/Screen.h"
+#include "../entities/Collision.h"
 #include "../helpers/errors-handler.h"
+#include "../helpers/math.h"
+#include "../interface/common-interface.h"
 
 #include <cmath>
-#include <initializer_list>
 #include <memory>
 #include <array>
 
+namespace cgEngine {
 namespace shapes {
 
 using namespace std;
+
 
 struct IShape {
 	virtual IViewParent* getParent() = 0;
 	virtual void setParent(IViewParent* parent) = 0;
 	virtual void render(IScreen& screen) = 0;
-	virtual TranslationMatrix& getMatrix() {
-		static TranslationMatrix matrix{};
+	virtual TransformMatrix& getMatrix() {
+		static TransformMatrix matrix{};
 		return matrix;
 	}
-	virtual void clear(IScreen& screen, TranslationMatrix& matrix) = 0;
+	virtual void clear(IScreen& screen, TransformMatrix& matrix) = 0;
 
-
-	// Deprecated
-	virtual shared_ptr<IInequality> getInequality() = 0;
-	virtual void correctInequality() = 0;
-
-
-	virtual void setMatrix(const TranslationMatrix& matrix) {}
+	virtual void setMatrix(const TransformMatrix& matrix) {}
 	virtual void setPosition(Coords coords) = 0;
 	virtual Coords getPosition() = 0;
 
 	virtual void correctCollisionDetector() {}
 	virtual bool isCollide(IShape* other) = 0;
 
-	virtual void applyMatrix(const TranslationMatrix& matrix) = 0;
+	virtual void applyMatrix(const TransformMatrix& matrix) = 0;
 
 	virtual float getWidth() = 0;
 	virtual float getHeight() = 0;
@@ -80,9 +71,9 @@ struct ShapeCollection: public vector<shared_ptr<IShape>> {
 class Shape : public IShape {
 	/*shared_ptr<IViewObject> parent;*/
 public:
-	TranslationMatrix position;
+	TransformMatrix position;
 	IViewParent* parent;
-	Shape(): position{TranslationMatrix::getUnitMatrix()} {}
+	Shape(): position{TransformMatrix::getUnitMatrix()} {}
 	void setParent(IViewParent* parent) override {
 		this->parent = parent;
 	}
@@ -90,12 +81,12 @@ public:
 		return parent;
 	}
 	bool color = true;
-	//TranslationMatrix matrix;
-	//TranslationMatrix& getMatrix() override {
+	//TransformMatrix matrix;
+	//TransformMatrix& getMatrix() override {
 	//	return matrix;
 	//}
 
-	//void setMatrix(const TranslationMatrix& matrix) override {
+	//void setMatrix(const TransformMatrix& matrix) override {
 	//	this->matrix = matrix;
 	//}
 	//Coords applyMatrix(int16_t x, int16_t y) {
@@ -104,17 +95,17 @@ public:
 	//Coords applyMatrix(Coords coords) {
 	//	return applyMatrix(coords.x, coords.y, matrix);
 	//}
-	//Coords applyMatrix(Coords coords, TranslationMatrix& matrix) {
+	//Coords applyMatrix(Coords coords, TransformMatrix& matrix) {
 	//	return applyMatrix(coords.x, coords.y, matrix);
 	//}
 	//
-	//Coords applyMatrix(int16_t x, int16_t y, TranslationMatrix& matrix) {
+	//Coords applyMatrix(int16_t x, int16_t y, TransformMatrix& matrix) {
 	//	Coords res;
 	//	res.x = x + matrix[2];
 	//	res.y = y + matrix[5];
 	//	return res;
 	//}
-	void clear(IScreen& screen, TranslationMatrix& matrix) override {
+	void clear(IScreen& screen, TransformMatrix& matrix) override {
 		bool oldColor = color;
 		color = false;
 		//render(screen, matrix);
@@ -135,16 +126,13 @@ public:
 };
 
 struct Point : public Shape {
-	shared_ptr<IInequality> inequality;
 	PointCollision ptCollision{0, 0};
 public:
 	Coords coords{};
 	Point() = default;
 	Point(float x, float y, bool color = true): Shape{}, ptCollision{x, y}
-			//inequality{ make_shared<PointInequality>(Coords{x, y}) } 
 	{
 		this->color = color;
-		/*setPosition({x, y});*/
 		coords = {x, y};
 	}
 	Point(Coords coords): Point{coords.x, coords.y, true} {}
@@ -154,7 +142,7 @@ public:
 		return ptCollision.isCollide(collision);
 	}
 
-	//void render(IScreen& screen, TranslationMatrix& matrix) override 
+	//void render(IScreen& screen, TransformMatrix& matrix) override 
 	void render(IScreen& screen) override {
 		Coords coords = getPosition();
 		coords = position.apply(coords);
@@ -164,34 +152,15 @@ public:
 	operator Coords() {
 		return getPosition();
 	}
-	shared_ptr<IInequality> getInequality() override {
-		return inequality;
-	}
-	void correctInequality() override {
-		/*Coords coords = applyMatrix(x, y, matrix);
-		static_pointer_cast<PointInequality>(inequality)->init(coords);*/
-	}
-	void correctCollisionDetector() override {
-		/*ptCollision.applyMatrix(matrix);*/
-	}
-	//void setPosition(Coords coords) override {
-	//	setMatrixPosition(coords);
-	//	/*correctInequality();*/
-	//	correctCollisionDetector();
-	//	//Coords newCoords = getPosition();
-	//	//static_pointer_cast<PointInequality>(inequality)->init(newCoords);
-	//}
-	//Coord applyMatrix() {
-	//	return applyMatrix()
-	//}
+
 	bool isCollide(IShape* other) override; 
 
-	void applyMatrix(const TranslationMatrix& matrix) override {
+	void applyMatrix(const TransformMatrix& matrix) override {
 		coords = matrix.apply(coords);
 		ptCollision.applyMatrix(matrix);
 	}
 	void setPosition(Coords coords) override {
-		//applyMatrix(TranslationMatrix::getPositionMatrix(coords));
+		//applyMatrix(TransformMatrix::getPositionMatrix(coords));
 		this->coords = coords;
 		auto parent = getParent();
 		position.setMovePosition(coords);
@@ -210,19 +179,13 @@ public:
 };
 
 class Line : public Shape {
-
-	// deprecated
-	shared_ptr<IInequality> inequality;
-	
   public:
-  
 	Point a, b;
 	LineCollision lineCollision;
 	Line() = default;
 	Line(Point a, Point b, bool color = true) : 
 			Shape(),
 			a{ a }, b{ b }, 
-			inequality{make_shared<LineInequality>(a, b)},
 			lineCollision{a.getPosition(), b.getPosition()}
 	{
 		this->color = color;
@@ -230,18 +193,9 @@ class Line : public Shape {
 		
 	}
 	Line(Coords a, Coords b, bool color = true) : a{ Point{a} }, b{ Point{b} }, 
-			inequality{ make_shared<LineInequality>(Point{a}, Point{b}) },
 			lineCollision{ a, b }
 	{
 		this->color = color;
-		/*setPosition({ 0, 0 });*/
-	}
-
-	//deprecated
-	void correctInequality() override {
-		/*Coords pt1 = applyMatrix(a.x, a.y);
-		Coords pt2 = applyMatrix(b.x, b.y);
-		static_pointer_cast<LineInequality>(inequality)->init(pt1, pt2);*/
 	}
 
 	Coords getAGlobalPosition() {
@@ -280,49 +234,9 @@ class Line : public Shape {
 			y += diffY;
 		}
 	}
-	//void render(IScreen& screen) override {
-	//	//Coords coords = getPosition();
-	//	//Coords aPos = a.getPosition();
-	//	//Coords bPos = b.getPosition();
-	//	//aPos = position.apply(aPos);
-	//	//bPos = position.apply(bPos);
-	//	//aPos = getParent()->applyAllMatrixes(aPos);
-	//	//bPos = getParent()->applyAllMatrixes(bPos);
-	//	auto aPos = getAGlobalPosition();
-	//	auto bPos = getBGlobalPosition();
-	//	float width = abs(abs(bPos.x) - abs(aPos.x));
-	//	float height = abs(abs(bPos.y) - abs(aPos.y));
-	//	float maxLen = width > height ? width : height;
-	//	float xDiff = width / maxLen;
-	//	float yDiff = height / maxLen;
-	//	//float xLast = bPos.x, yLast = bPos.y;
-	//	auto nearEqual = [](float f1, float f2) {
-	//		return abs(abs(f2) - abs(f1)) <= 0.1;
-	//	};
-	//	if (aPos.x > bPos.x) {
-	//		xDiff = -xDiff;
-	//	}
-	//	if (aPos.y > bPos.y) {
-	//		yDiff = -yDiff;
-	//	}
-
-	//	//screen.set(x, y, color);
-	//	for (float xCur = aPos.x, yCur = aPos.y; !nearEqual(xCur, bPos.x) || !nearEqual(yCur, bPos.y); xCur += xDiff, yCur += yDiff) {
-	//		int16_t x = static_cast<int16_t>(xCur);// || 1;
-	//		int16_t y = static_cast<int16_t>(yCur);// || 1;
-	//		//int16_t x = static_cast<int16_t>(round(xCur));// || 1;
-	//		//int16_t y = static_cast<int16_t>(round(yCur));// || 1;
-	//		if (x < 0 || y < 0) return;
-	//		screen.set(x, y, color);
-	//	}
-	//}
-	shared_ptr<IInequality> getInequality() override {
-		return inequality;
-	}
-
 	bool isCollide(IShape* other) override;
 
-	void applyMatrix(const TranslationMatrix& matrix) override {
+	void applyMatrix(const TransformMatrix& matrix) override {
 		a.applyMatrix(matrix);
 		b.applyMatrix(matrix);
 		lineCollision.applyMatrix(matrix);
@@ -334,8 +248,6 @@ class Line : public Shape {
 		auto newB = position.apply(b.getPosition());
 		newB = getParent()->applyAllMatrixes(newB);
 		lineCollision.init(newA, newB);
-		//applyMatrix(TranslationMatrix::getPositionMatrix(coords));
-
 	}
 	Coords getPosition() override {
 		return position.getPosition();
@@ -366,9 +278,6 @@ class Line : public Shape {
 class Rectangle : public Shape {
 	Coords a, b, c, d;
 	Line h1, h2, v1, v2;
-	//vector<TriangleInequality> triangles;
-	//deprecated
-	shared_ptr<Inequality> inequality;
 public:
 	PolylineCollision polylineCollision;
 
@@ -378,11 +287,8 @@ public:
 		setParent(parent);
 		init(a, b, c, d, color);
 	}
-	void init(Point a, Point b, Point c, Point d, bool color = true)/*: a{a}, b{b}, c{c}, d{d}*/ 
-			/*h1{a, b, color}, h2{d, c, color}, v1{b, c, color}, v2{a, d, color},*/
-		//inequality{make_shared<RectangleInequality>(TriangleInequality{a, b, c}, TriangleInequality{a, d, c})}
+	void init(Point a, Point b, Point c, Point d, bool color = true) 
 	{
-		//color = this->color;
 		this->a = a;
 		this->b = b;
 		this->c = c;
@@ -392,10 +298,6 @@ public:
 		h2 = Line{ d, c, color };
 		v1 = Line{ b, c, color };
 		v2 = Line{ a, d, color };
-		//triangles.push_back(TriangleInequality{a, b, c});
-		//triangles.push_back(TriangleInequality{a, d, c});
-		inequality = make_shared<RectangleInequality>(TriangleInequality{a, b, c}, TriangleInequality{a, d, c});
-		/*setPosition({ 0, 0 });*/
 		auto pParent = getParent();
 		h1.position = position;
 		h2.position = position;
@@ -411,16 +313,10 @@ public:
 			const_cast<Line&>(line).render(screen);
 		}
 	}
-	shared_ptr<IInequality> getInequality() override {
-		return inequality;
-	}
-
-	void correctInequality() override {
-	}
 
 	bool isCollide(IShape* other) override;
 
-	void applyMatrix(const TranslationMatrix& matrix) override {
+	void applyMatrix(const TransformMatrix& matrix) override {
 		a = matrix.apply(a);
 		b = matrix.apply(b);
 		c = matrix.apply(c);
@@ -432,7 +328,7 @@ public:
 		polylineCollision.applyMatrix(matrix);
 	}
 	void setPosition(Coords coords) override {
-		//applyMatrix(TranslationMatrix::getPositionMatrix(coords));
+		//applyMatrix(TransformMatrix::getPositionMatrix(coords));
 
 		position.setMovePosition(coords);
 		h1.setPosition(coords);
@@ -470,5 +366,5 @@ public:
 		return height;
 	}
 };
-
 } // namespace shapes
+} // namespace cgEngine

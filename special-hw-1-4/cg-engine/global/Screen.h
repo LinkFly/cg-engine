@@ -6,6 +6,8 @@
 
 using namespace std;
 
+namespace cgEngine {
+
 struct IScreen {
 	virtual void set(int16_t x, int16_t y, bool bSet) = 0;
 	virtual void set(float fx, float fy, bool bSet) = 0;
@@ -46,3 +48,5 @@ public:
 	vector<shared_ptr<IScreen>>& getBuffersCollection() override;
 	void combineBuffers() override;
 };
+
+}

@@ -1,6 +1,6 @@
 #include "Screen.h"
 #include "Game.h"
-#include "graphics/Shapes.h"
+#include "../graphics/Shapes.h"
 
 #include <vector>
 #include <iostream>
@@ -8,6 +8,8 @@
 #include <windows.h>
 
 using namespace std;
+
+namespace cgEngine {
 
 Screen::Screen(uint16_t width, uint16_t height) : width{ width }, height{height} {
 	displayMatrix.resize(width * height);
@@ -109,4 +111,6 @@ void Screen::combineBuffers()
 					set(i, j, true);
 	}
 	clearBuffersCollection();
+}
+
 }

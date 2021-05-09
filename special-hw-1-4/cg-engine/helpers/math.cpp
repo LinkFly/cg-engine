@@ -1,9 +1,11 @@
-#include "math-functions.h"
+#include "math.h"
 #include "errors-handler.h"
 
 #include <vector>
 #include <cstdint>
 #include <array>
+
+namespace cgEngine {
 
 using namespace std;
 
@@ -341,3 +343,5 @@ float Coords::getLength() {
 //	float width, height;
 //	return getWrapRect(aCoords, width, height);
 //}
+
+}

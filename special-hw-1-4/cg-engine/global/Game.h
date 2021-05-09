@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Screen.h"
-#include "Objects.h"
+#include "../entities/Objects.h"
 #include "Application.h"
-#include "Timer.h"
+#include "../entities/Timer.h"
 
 #include <string>
 #include <vector>
@@ -23,6 +23,8 @@
 #include <windows.h>
 
 using namespace std;
+
+namespace cgEngine {
 
 enum class Type {
 	bytes, string
@@ -262,3 +264,5 @@ public:
 		tree->getChildren()->remove(obj);
 	}
 };
+
+}
