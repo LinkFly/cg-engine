@@ -249,9 +249,9 @@ void run() {
 	pPlayer = Builder::createLineObject(shapes::Point{ 0, 0 }, shapes::Point{ 0, 9 });
 	static EventHandler nearTheBorderCallback = [](IView* obj, const Message& message, const MessageData* pData) {
 		Coords pos = obj->getPosition();
-		cout.setf(ios::fixed);
-		cout << "=================================[LineObject] message: " << message
-			<< setprecision(2) << " pos: " << pos.x << ", " << pos.y << endl;
+		//cout.setf(ios::fixed);
+		//cout << "=================================[LineObject] message: " << message
+		//	<< setprecision(2) << " pos: " << pos.x << ", " << pos.y << endl;
 	};
 	pPlayer->addEventHandler(&nearTheBorderCallback);
 	pPlayer->setMinMaxByScreen();
