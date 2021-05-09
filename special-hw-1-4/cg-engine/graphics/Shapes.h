@@ -72,7 +72,7 @@ class Shape : public IShape {
 	/*shared_ptr<IViewObject> parent;*/
 public:
 	TransformMatrix position;
-	IViewParent* parent;
+	IViewParent* parent = nullptr;
 	Shape(): position{TransformMatrix::getUnitMatrix()} {}
 	void setParent(IViewParent* parent) override {
 		this->parent = parent;

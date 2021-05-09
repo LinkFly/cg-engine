@@ -10,7 +10,7 @@ using namespace std;
 
 template<class T>
 struct Option {
-	T val;
+	T val{};
 	bool bExistsVal = false;
 	Option() = default;
 	Option(const T& val): val{val}, bExistsVal{true} {}

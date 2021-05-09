@@ -35,7 +35,7 @@ enum class EventType {
 };
 
 struct Data {
-	Type type;
+	Type type{};
 	vector<uint8_t> payload;
 	Data() = default;
 	Data(const string& str) {
@@ -55,7 +55,7 @@ struct Data {
 
 class Event {
 public:
-	EventType eventType;
+	EventType eventType{};
 	Data data;
 };
 

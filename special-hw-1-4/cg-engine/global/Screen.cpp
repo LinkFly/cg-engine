@@ -12,7 +12,7 @@ using namespace std;
 namespace cgEngine {
 
 Screen::Screen(uint16_t width, uint16_t height) : width{ width }, height{height} {
-	displayMatrix.resize(width * height);
+	displayMatrix.resize(static_cast<size_t>(width) * height);
 	createBuffersCollection();
 }
 
@@ -25,11 +25,11 @@ void Screen::set(int16_t x, int16_t y, bool bSet) {
 void Screen::set(float fx, float fy, bool bSet) {
 	auto x = static_cast<int16_t>(fx);
 	auto y = static_cast<int16_t>(fy);
-	displayMatrix[y * width + x] = bSet;
+	displayMatrix[static_cast<size_t>(y) * width + x] = bSet;
 }
 
 bool Screen::get(uint16_t x, uint16_t y) {
-	return displayMatrix[x * width + y];
+	return displayMatrix[static_cast<size_t>(x) * width + y];
 }
 void Screen::draw() {
 	if (width == 0 || displayMatrix.empty())
@@ -49,7 +49,7 @@ void Screen::draw() {
 		i += 2) {
 		string twoLine(width, '\0');
 		for (int16_t j = 0; j < width; ++j) {
-			bool bMark = displayMatrix[i * width + j];
+			bool bMark = displayMatrix[static_cast<size_t>(i) * width + j];
 			twoLine[j] = bMark ? top : none;
 		}
 		if (i + 1 < height) {
@@ -76,7 +76,7 @@ void Screen::draw() {
 void Screen::clear()
 {
 	clearBuffersCollection();
-	for(size_t i = 0; i < width * height; ++i)
+	for(size_t i = 0; i < static_cast<size_t>(width) * height; ++i)
 		displayMatrix[i] = false;
 }
 
