@@ -235,7 +235,7 @@ void run() {
 	};
 
 	////////// Bot /////////////
-	auto pBot = Builder::createLineObject(shapes::Point{ 49, 0 }, shapes::Point{ 49, 9 });
+	auto pBot = Builder::createLineObject(shapes::Point{ 46, 0 }, shapes::Point{ 46, 19 });
 	pBot->setMinMaxByScreen();
 	pBot->setSpeed(100);
 	auto timer = ThisGame::game->setTimer(200, [&pBot]() {
